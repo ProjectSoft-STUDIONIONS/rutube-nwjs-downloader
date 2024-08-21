@@ -5,11 +5,14 @@
 	const URL = require('node:url');
 	const stream = require('node:stream');
 	const util = require('node:util');
+	const { Blob } = require('node:buffer');
 	const m3u8Parser = require('m3u8-parser');
 	const splitFile = require('split-file');
 	const sanitize = require('sanitize-filename');
 	const win = nw.Window.get();
 	const img = "/images/rutube.svg";
+
+	const streamPipeline = util.promisify(stream.pipeline);
 
 	const ownKeys = (e, t) => {
 			var n = Object.keys(e);
@@ -103,7 +106,48 @@
 					}
 				});
 			})
-		};
+		},
+
+		removeDir = async function(dir) {
+			return new Promise((resolve, reject) => {
+				fs.rm(dir, {
+					recursive: true,
+					force: true
+				}, err => {
+					if (err) {
+						reject(err);
+					}
+					resolve(true);
+				});
+			});
+		},
+
+		downloadSegment = async function(input, output) {
+			return new Promise((resolve, reject) => {
+				fetch(input)
+					.then(response => response.arrayBuffer())
+					.then(buffer => {
+						let buff = Buffer.from(buffer);
+						fs.writeFileSync(output, buff);
+						resolve(output);
+					}).catch((e) => {
+						reject(false);
+					});
+			});
+		},
+
+		execFFmpeg = async function (input, output) {
+			return new Promise((resolve, reject) => {
+				const child = require('node:child_process')
+					.exec(`ffmpeg -hide_banner -y -i "${input}" -vcodec copy -acodec copy "${output}"`);
+				child.stdout.pipe(process.stdout);
+				child.on('exit', () => {
+					resolve(true);
+				});
+			})
+		},
+
+		delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 	let rutube_dl = "--rutube-dl__",
 		style = {
@@ -130,18 +174,18 @@
 
 	setInterval(resizerWin, 500);
 
-	console.log(videoDir);
-
 	let segments = [];
 	// user
 	const videoImage = document.querySelector('#app .block_image'),
 		videoUrl = document.querySelector('#app .block_input .url'),
 		videoTitle = document.querySelector('#app .block_text .title'),
 		videoProgress = document.querySelector('#app .block_progress .progress'),
+		blockResult = document.querySelector('#app .block_result'),
 		loader = document.querySelector('#app .downloader .loader'),
 		btn = document.querySelector('#app .downloader .btn');
 
 	videoUrl.addEventListener('input', (e) => {
+		blockResult.innerHTML = "";
 		let el = document.documentElement;
 		const regex_rutube = /^https?:\/\/rutube\.ru\/video\/(\w+)/;
 		let url = videoUrl.value, m, pls;
@@ -171,13 +215,11 @@
 							m3u8Video.end();
 							let plsm3u8 = m3u8Video.manifest.playlists;
 							let plsurl = plsm3u8[plsm3u8.length -1];
-							console.log(plsurl.uri);
 							// Получаем ссылку для составления в будующем ссылки на сегмент
 							const myURL = URL.parse(plsurl.uri);
 							let pathname = myURL.pathname.split("/");
 							pathname.pop();
 							const urlPrefix = myURL.protocol + "//" + myURL.host + "/" + pathname.join("/") + "/";
-
 							fetch(plsurl.uri)
 								.then(res => res.text())
 								.then(async segm => {
@@ -232,23 +274,80 @@
 
 	btn.addEventListener('click', async (e) => {
 		e.preventDefault();
-		console.log(__dirname);
 		if(segments.length){
 			loader.classList.add('load');
-			let key;
+			// 
+			let key, data = "", int;
+			// Получаем ссылки сегментов
+			let arrFiles = [];
+			// Забрать расширение сегмента
+			let ext;
 			for(key in segments){
-
+				// Забираем расширение
+				ext = path.extname(segments[key]);
+				// По сути здесь можно качать и сохранять
+				int = parseInt(key) + 1;
+				let fname = 'segment-' + `${int}`.padStart(10, '0') + ext;
+				try {
+					const fileOut = videoDir + "/" + fname;
+					await downloadSegment(segments[key], fileOut).catch(e => console.log(e));
+					videoProgress.value = (int * 100) / segments.length;
+					arrFiles.push(fileOut);
+				} catch(e) {
+					loader.classList.remove('load');
+					return !1;
+				}
 			}
+			if(arrFiles.length == segments.length){
+				try {
+					// Соединяем, сохраняем, конвертируем
+					const saveTitle = sanitize(videoTitle.title);
+					// Объединяем сегменты
+					await splitFile.mergeFiles(arrFiles, `${videoDir}/${saveTitle}${ext}`);
+					// Удаляем сегменты
+					await deleteFiles(/^segment-.*\.ts/, videoDir);
+					// Удаляем все mp4 если есть
+					await deleteFiles(/^.*\.mp4/, videoDir);
+					// Запускаем ffmpeg для преобразования исходного ts файла в mp4
+					await execFFmpeg(`${videoDir}/${saveTitle}${ext}`, `${videoDir}/${saveTitle}.mp4`);
+					// Удаляем исходный файл ts
+					await deleteFile(`${videoDir}/${saveTitle}${ext}`);
+					// ProgressBar
+					videoProgress.value = 0;
+					// Вставляем ссылку
+					// Пока оставлю так...
+					blockResult.innerHTML = `<a href="${videoDir}/${saveTitle}.mp4" download="${saveTitle}.mp4">${saveTitle}.mp4</a>`;
+				} catch(e) {
+					loader.classList.remove('load');
+					return !1;
+				}
+			}else{
+				// Ни все сегменты скачены
+				
+			}
+			loader.classList.remove('load');
 		}
 		return !1;
 	});
 
 	document.querySelector('body').addEventListener('click', (e) => {
 		if(e.target.tagName == "A"){
-			e.preventDefault();
-			let href = e.target.href;
-			nw.Shell.openExternal(href);
-			return !1;
+			if(e.target.target == "_blank"){
+				e.preventDefault();
+				let href = e.target.href;
+				nw.Shell.openExternal(href);
+				return !1;
+			}
 		}
-	})
+	});
+
+	let rtdl = nw.Window.get();
+
+	rtdl.on('close', async () => {
+		rtdl.hide();
+		await deleteFiles(/^segment-.*\.ts/, videoDir);
+		await deleteFiles(/^.*\.mp4/, videoDir);
+		await removeDir(videoDir);
+		rtdl.close(true);
+	});
 })()
