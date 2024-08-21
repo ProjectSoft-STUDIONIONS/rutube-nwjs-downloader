@@ -185,7 +185,7 @@
 		btn = document.querySelector('#app .downloader .btn');
 
 	videoUrl.addEventListener('input', (e) => {
-		blockResult.innerHTML = "";
+		blockResult.innerText = "\u00A0";
 		let el = document.documentElement;
 		const regex_rutube = /^https?:\/\/rutube\.ru\/video\/(\w+)/;
 		let url = videoUrl.value, m, pls;
