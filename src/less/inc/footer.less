@@ -1,0 +1,25 @@
+footer {
+	display: flex;
+	flex-direction: row;
+	padding-top: 1em;
+	.footer {
+		&-block {
+			width: 33.3333%;
+			min-width: 33.3333%;
+			max-width: 33.3333%;
+			&.footer {
+				&_left {
+					a {
+						text-decoration: none;
+						span {
+							text-decoration: underline;
+						}
+						&::before {
+							margin-right: 10px;
+						}
+					}
+				}
+			}
+		}
+	}
+}

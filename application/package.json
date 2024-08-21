@@ -1,0 +1,38 @@
+{
+	"name": "RuTube-DL",
+	"version": "1.0.0",
+	"description": "Скачивание видео с RuTube на NW.js",
+	"buildDate": "13 August 2024 22:00:23",
+	"author": "ProjectSoft",
+	"homepage": "https://projectsoft.ru/",
+	"license": "MIT",
+	"main": "index.html",
+	"nodejs": true,
+	"chromium-args": "--child-clean-exit --ignore-certificate-errors --disk-cache-size=1 --media-cache-size=1 --disable-web-security --use-strict=true --allow-running-insecure-content",
+	"winIco": "favicon.ico",
+	"page-cache": false,
+	"webkit": {
+		"plugin": true
+	},
+	"window": {
+		"title": "RuTube-DL",
+		"icon": "favicon.png",
+		"exe_icon": "favicon.png",
+		"mac_icon": "favicon.png",
+		"show_in_taskbar": true,
+		"kiosk_emulation": false,
+		"id": "rutube-dl-nwjs",
+		"position": "center",
+		"resizable": true,
+		"visible": true,
+		"min_width": 600,
+		"min_height": 520,
+		"width": 600,
+		"height": 520
+	},
+	"dependencies": {
+		"m3u8-parser": "^7.1.0",
+		"split-file": "^2.3.0",
+		"sanitize-filename": "latest"
+	}
+}

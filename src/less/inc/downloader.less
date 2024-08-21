@@ -1,0 +1,104 @@
+@image_width: 200px;
+@padding: 15px;
+@summ: @image_width + @padding;
+
+.downloader {
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	position: relative;
+	.loader {
+		position: absolute;
+		opacity: 0;
+		visibility: hidden;
+		top: 0px;
+		left: 0px;
+		width: 100%;
+		height: 100%;
+		right: 0px;
+		bottom: 0px;
+		background-color: #FFFFFF;
+		z-index: 10;
+		&.load {
+			visibility: visible;
+			opacity: .5;
+		}
+	}
+	.image {
+		padding-right: @padding;
+	}
+	.links {
+		max-width: ~'calc(100% - @{summ})';
+		width: 100%;
+	}
+	.image,
+	.links {
+		margin-bottom: @padding;
+	}
+	.progress {
+		width: 100%;
+	}
+	.block {
+		&_image {
+			width: @image_width;
+			aspect-ratio: ~"16 / 9";
+			background-repeat: no-repeat;
+			background-position: center center;
+			background-size: contain;
+			background-image: var(--rutube-dl__background-image);
+			background-color: #000;
+			box-shadow: 0 0 1px 2px #333;
+			border-radius: 6px;
+			overflow: hidden;
+			position: relative;
+			&::after {
+				content: attr(data-duration);
+				padding: 2px;
+				background-color: rgba(0, 0, 0, .5);
+				position: absolute;
+				bottom: 5px;
+				right: 5px;
+				border-radius: 3px;
+				font-size: 12px;
+			}
+		}
+		&_input {
+			margin-bottom: @padding;
+			input {
+				width: 100%;
+				display: block;
+				padding: 10px 15px;
+				border-radius: 6px;
+				border-width: 0;
+				&,
+				&:focus-visible {
+					outline: unset;
+				}
+			}
+		}
+		&_text {
+			.title {
+				white-space: nowrap;
+				text-overflow: ellipsis;
+				overflow: hidden;
+				margin-bottom: 1em;
+			}
+		}
+		&_progress {
+			progress {
+				width: 100%;
+				display: block;
+				height: 20px;
+				border-radius: 5px;
+				overflow: hidden;
+				&::-webkit-progress-bar {
+					background-color: #555;
+				}
+				&::-webkit-progress-value {
+					background-color: white;
+				}
+			}
+		}
+	}
+}

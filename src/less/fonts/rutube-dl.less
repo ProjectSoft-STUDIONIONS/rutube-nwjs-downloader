@@ -1,0 +1,48 @@
+@icomoon-font-family: "Rutube-DL";
+@icomoon-font-path: "/fonts";
+
+@icon-close: "\e900";
+@icon-download: "\e901";
+@icon-github: "\e902";
+@icon-hack: "\e903";
+
+@font-face {
+	font-family: '@{icomoon-font-family}';
+	src: url('@{icomoon-font-path}/@{icomoon-font-family}.woff2?wlrhvg') format('woff2');
+	font-weight: normal;
+	font-style: normal;
+	font-display: block;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+	font-family: '@{icomoon-font-family}' !important;
+	speak: never;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+	-webkit-font-smoothing: antialiased;
+}
+
+.icon-close {
+	&:before {
+		content: @icon-close; 
+	}
+}
+.icon-download {
+	&:before {
+		content: @icon-download; 
+	}
+}
+.icon-github {
+	&:before {
+		content: @icon-github; 
+	}
+}
+.icon-hack {
+	&:before {
+		content: @icon-hack; 
+	}
+}
+

@@ -1,0 +1,15 @@
+*.txt
+*-lock.*
+*.sublime-workspace
+application/**
+test/
+tests/
+output/
+.cache/
+bower_components/
+node_modules/
+build/
+
+!application/package.json
+!application/favicon.*
+!application/bin/

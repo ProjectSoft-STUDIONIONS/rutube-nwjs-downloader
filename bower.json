@@ -1,0 +1,18 @@
+{
+	"name":"rutube-nwjs-downloader",
+	"description":"Скачивание видео с RuTube на NW.js",
+	"main":"Gruntfile.js",
+	"authors":[
+		"ProjectSoft <projectsoft2009@yandex.ru>"
+	],
+	"license":"MIT",
+	"homepage":"https://gitflic.ru/project/projectsoft-studionions/rutube-nwjs-downloader",
+	"private":true,
+	"ignore":[
+		"**/.*",
+		"node_modules",
+		"bower_components",
+		"test",
+		"tests"
+	]
+}

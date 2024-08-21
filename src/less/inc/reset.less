@@ -1,0 +1,114 @@
+:root {
+	--box-shadow: 0 0 7px #000000;
+	--rutube-dl__background-image: url("/images/rutube.svg");
+}
+.box-shadow() {
+	box-shadow: var(--box-shadow);
+}
+* {
+	font-family: "Roboto", sans-serif;
+	&,
+	&::before,
+	&::after {
+		box-sizing: border-box;
+		user-select: none;
+	}
+}
+.clearfix {
+	&::before,
+	&::after {
+		display: table;
+		content: "";
+	}
+	&::after {
+		clear: both;
+	}
+}
+a {
+	&,
+	&:hover,
+	&:focus,
+	&:focus-visible {
+		outline: unset !important;
+		color: #ffffff;
+	}
+}
+p {
+	margin-top: unset;
+}
+input {
+	user-select: auto;
+}
+h1, h2, h3, h4, h5, h6, strong, b {
+	font-weight: 500;
+}
+body {
+	padding: 0;
+	margin: 0;
+	font-family: "Roboto", sans-serif;
+	font-weight: 300;
+	font-size: 1em;
+	line-height: 1.2;
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+	background-color: #1C232B;
+	color: #FFFFFF;
+	&,
+	> header,
+	> main,
+	> footer {
+		color: #333;
+		background-color: #fff;
+		position: relative;
+	}
+	> header {
+		top: 0;
+		z-index: 5;
+	}
+	> header,
+	> footer {
+		flex: 0 0 auto;
+		.box-shadow();
+	}
+	> main {
+		flex: 1 0 auto;
+		max-height: var(--rutube-dl__main-height);
+		overflow-y: auto;
+		overflow-x: hidden;
+	}
+	> header,
+	> main,
+	> footer {
+		padding-left: 15px;
+		padding-right: 15px;
+		background-color: #1C232B;
+		color: #FFFFFF;
+	}
+	header {
+		> h1 {
+			white-space: nowrap;
+			&::before {
+				height: 40px;
+				width: 140px;
+				display: inline-block;
+				vertical-align: middle;
+				content: "";
+				background-image: data-uri('../images/rutube.svg');
+				background-position: center center;
+				background-repeat: no-repeat;
+				background-size: contain;
+				margin-bottom: 4px;
+				margin-right: 15px;
+				position: absolute;
+				top: 20px;
+				left: 15px;
+			}
+		}
+	}
+}
+.row {
+	.clearfix();
+	margin-left: -15px;
+	margin-right: -15px;
+}
