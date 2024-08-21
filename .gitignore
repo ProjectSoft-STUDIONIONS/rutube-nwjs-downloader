@@ -13,3 +13,4 @@ build/
 !application/package.json
 !application/favicon.*
 !application/bin/
+!application/bin/*.exe
