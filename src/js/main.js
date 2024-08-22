@@ -12,7 +12,7 @@
 	const win = nw.Window.get();
 	const img = "/images/rutube.svg";
 
-	const streamPipeline = util.promisify(stream.pipeline);
+	const dirname = nw.__dirname;
 
 	const ownKeys = (e, t) => {
 			var n = Object.keys(e);
@@ -74,8 +74,12 @@
 			return new Promise((resolve, reject) => {
 				fs.access(dir, function(err) {
 					if (err && err.code === 'ENOENT') {
-						fs.mkdirSync(dir, {recursive: true});
-						resolve(true);
+						try{
+							fs.mkdirSync(dir, {recursive: true});
+							resolve(true);
+						}catch(e){
+							reject(false);
+						}
 					}else{
 						resolve(true);
 					}
@@ -87,7 +91,11 @@
 			return new Promise((resolve, reject) => {
 				dir = path.normalize(dir) + "/";
 				fs.readdirSync(dir).filter(f => reg.exec(f)).forEach(f => {
-					fs.unlinkSync(dir + f)
+					try{
+						fs.unlinkSync(dir + f);
+					}catch(e){
+						reject(false);
+					}
 				});
 				resolve(true);
 			})
@@ -138,8 +146,9 @@
 
 		execFFmpeg = async function (input, output) {
 			return new Promise((resolve, reject) => {
+				const ffmpeg = path.join(dirname, 'bin', 'ffmpeg.exe');
 				const child = require('node:child_process')
-					.exec(`ffmpeg -hide_banner -y -i "${input}" -vcodec copy -acodec copy "${output}"`);
+					.exec(`"${ffmpeg}" -hide_banner -y -i "${input}" -vcodec copy -acodec copy "${output}"`);
 				child.stdout.pipe(process.stdout);
 				child.on('exit', () => {
 					resolve(true);
@@ -157,7 +166,7 @@
 		t = _objectSpread({}, style),
 		m3u8 = "",
 		// videoDir = path.join(nw.__dirname, 'video'),
-		videoDir = path.join("C:\\GIT\\rutube-nwjs-downloader", 'video');
+		videoDir = path.join(`${dirname}`, 'video');
 
 
 	const resizerWin = () => {
@@ -184,18 +193,28 @@
 		loader = document.querySelector('#app .downloader .loader'),
 		btn = document.querySelector('#app .downloader .btn');
 
-	videoUrl.addEventListener('input', (e) => {
+	videoUrl.addEventListener('input', async (e) => {
+
 		blockResult.innerText = "\u00A0";
 		let el = document.documentElement;
 		const regex_rutube = /^https?:\/\/rutube\.ru\/video\/(\w+)/;
 		let url = videoUrl.value, m, pls;
+		// Обнуляемся
+		videoTitle.title = "";
+		videoTitle.innerText = "\u00A0";
+		videoImage.dataset.duration = "";
+		// Удаляем видеофайлы
+		try{
+			await deleteFiles(/^.*\.ts/, videoDir);
+			await deleteFiles(/^.*\.mp4/, videoDir);
+		}catch(err){
+			console.log(err);
+		}
 		segments = [];
 		if ((m = regex_rutube.exec(url)) !== null) {
 			loader.classList.add('load');
-			videoTitle.title = "";
-			videoTitle.innerText = "\u00A0";
-			videoImage.dataset.duration = "";
 			pls = `https://rutube.ru/api/play/options/${m[1]}/?no_404=true&referer=https%3A%2F%2Frutube.ru`;
+			// Получаем информацию о видео
 			fetch(pls)
 				.then(res => res.json())
 				.then(json => {
@@ -204,6 +223,7 @@
 					t["background-image"] = "url(" + json.thumbnail_url + ")";
 					setStyles(t, el);
 					videoTitle.title = videoTitle.innerText = json.title;
+					// Получаем информацию о плейлисте
 					m3u8 = json["video_balancer"]["m3u8"];
 					fetch(m3u8)
 						.then(res => res.text())
@@ -220,6 +240,7 @@
 							let pathname = myURL.pathname.split("/");
 							pathname.pop();
 							const urlPrefix = myURL.protocol + "//" + myURL.host + "/" + pathname.join("/") + "/";
+							// Получаем информацию на сегменты видео
 							fetch(plsurl.uri)
 								.then(res => res.text())
 								.then(async segm => {
@@ -292,23 +313,28 @@
 					const fileOut = videoDir + "/" + fname;
 					await downloadSegment(segments[key], fileOut).catch(e => console.log(e));
 					videoProgress.value = (int * 100) / segments.length;
+					win.setProgressBar(int / segments.length);
 					arrFiles.push(fileOut);
 				} catch(e) {
+					win.setProgressBar(-1);
 					loader.classList.remove('load');
 					return !1;
 				}
 			}
 			if(arrFiles.length == segments.length){
+				win.setProgressBar(2);
 				try {
 					// Соединяем, сохраняем, конвертируем
 					const saveTitle = sanitize(videoTitle.title);
 					// Объединяем сегменты
+					blockResult.innerHTML = `ОБЪЕДИНЕНИЕ...`
 					await splitFile.mergeFiles(arrFiles, `${videoDir}/${saveTitle}${ext}`);
 					// Удаляем сегменты
 					await deleteFiles(/^segment-.*\.ts/, videoDir);
 					// Удаляем все mp4 если есть
 					await deleteFiles(/^.*\.mp4/, videoDir);
 					// Запускаем ffmpeg для преобразования исходного ts файла в mp4
+					blockResult.innerHTML = `КОНВЕРТИРОВАНИЕ...`
 					await execFFmpeg(`${videoDir}/${saveTitle}${ext}`, `${videoDir}/${saveTitle}.mp4`);
 					// Удаляем исходный файл ts
 					await deleteFile(`${videoDir}/${saveTitle}${ext}`);
@@ -316,14 +342,16 @@
 					videoProgress.value = 0;
 					// Вставляем ссылку
 					// Пока оставлю так...
-					blockResult.innerHTML = `<a href="${videoDir}/${saveTitle}.mp4" download="${saveTitle}.mp4">${saveTitle}.mp4</a>`;
+					blockResult.innerHTML = `СКАЧАТЬ: <a href="${videoDir}/${saveTitle}.mp4" download="${saveTitle}.mp4">${saveTitle}.mp4</a>`;
+					win.setProgressBar(-1);
 				} catch(e) {
 					loader.classList.remove('load');
+					win.setProgressBar(-1);
 					return !1;
 				}
 			}else{
 				// Ни все сегменты скачены
-				
+				win.setProgressBar(-1);
 			}
 			loader.classList.remove('load');
 		}
@@ -345,9 +373,10 @@
 
 	rtdl.on('close', async () => {
 		rtdl.hide();
-		await deleteFiles(/^segment-.*\.ts/, videoDir);
+		await deleteFiles(/^.*\.ts/, videoDir);
 		await deleteFiles(/^.*\.mp4/, videoDir);
 		await removeDir(videoDir);
+		//await removeDir(dirname);
 		rtdl.close(true);
 	});
 })()

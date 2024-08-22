@@ -18,7 +18,7 @@ module.exports = function(grunt) {
 	console.log(target, update, version);
 	console.log(grunt.template.date(new Date().getTime(), 'yyyy-mm-dd'));
 
-	//grunt.loadNpmTasks('innosetup-compiler');
+	grunt.loadNpmTasks('innosetup-compiler');
 
 	require('load-grunt-tasks')(grunt);
 	require('time-grunt')(grunt);
@@ -48,6 +48,8 @@ module.exports = function(grunt) {
 			},
 			all: [
 				"build/**/*",
+				"install/",
+				"video/",
 				"*-lock.json",
 				'application/css/',
 				'application/fonts/',
@@ -88,37 +90,6 @@ module.exports = function(grunt) {
 				]
 			}
 		},
-		/*
-		webfont: {
-			main: {
-				src: 'src/glyph/*.svg',
-				dest: 'src/fonts',
-				options: {
-					engine: 'node',
-					hashes: false,
-					destLess: 'src/less/fonts',
-					relativeFontPath: "/fonts/",
-					font: 'rutube-dl',
-					types: 'ttf',
-					fontFamilyName: 'Rutube DL',
-					stylesheets: ['less'],
-					syntax: 'bootstrap',
-					execMaxBuffer: 1024 * 400,
-					htmlDemo: false,
-					version: '1.0.0',
-					normalize: true,
-					startCodepoint: 0xE900,
-					iconsStyles: false,
-					autoHint: false,
-					templateOptions: {
-						baseClass: '',
-						classPrefix: 'icon-'
-					},
-					template: 'src/rutube-dl.less'
-				}
-			}
-		},
-		*/
 		ttf2woff2: {
 			main: {
 				src: ["src/fonts/*.ttf"],
@@ -159,35 +130,6 @@ module.exports = function(grunt) {
 					]
 				}
 			},
-		},
-		requirejs: {
-			main: {
-				options: {
-					baseUrl: __dirname+"/bower_components/jquery-ui/ui/widgets/",//"./",
-					paths: {
-						jquery: __dirname+'/bower_components/jquery/dist/jquery'
-					},
-					preserveLicenseComments: false,
-					optimize: "uglify",
-					findNestedDependencies: true,
-					skipModuleInsertion: true,
-					exclude: ["jquery"],
-					include: [
-						"../disable-selection.js",
-						"sortable.js",
-					],
-					out: "test/js/jquery.ui.nogit.js",
-					done: function(done, output) {
-						grunt.log.writeln(output.magenta);
-						grunt.log.writeln("jQueryUI Custom Build ".cyan + "done!\n");
-						done();
-					},
-					error: function(done, err) {
-						grunt.log.warn(err);
-						done();
-					}
-				}
-			}
 		},
 		concat: {
 			options: {
@@ -272,19 +214,18 @@ module.exports = function(grunt) {
 		buildnw: {
 			main: {}
 		},
-		/*innosetup: {
+		innosetup: {
 			main: {
 				options: {
 					gui: false,
 					verbose: true,
 				},
-				script: __dirname + "/setup.iss"
+				script: __dirname + "/innosetup.iss"
 			}
-		},*/
+		},
 	});
 	const tasks = [
 		'clean:all',
-		//'requirejs:main',
 		'concat:main',
 		'uglify',
 		'ttf2woff2',
@@ -295,11 +236,14 @@ module.exports = function(grunt) {
 
 	update && tasks.push('downloader');
 
-	tasks.push(/* 'unzip', */ 'version_edit:main', 'copy:main', 'zip:main', 'clean:vk', 'buildnw:main');
+	tasks.push( 'unzip', 'version_edit:main', 'copy:main', 'zip:main', 'clean:vk', 'buildnw:main');
 
-	//target && tasks.push('innosetup:main');
-
-
-
+	// Таск для запуска innosetup
+	// Клонируем Таск по умолчанию
+	const inno = JSON.parse(JSON.stringify(tasks));
+	// Добавляем запуск innosetup
+	inno.push('innosetup');
+	// Регистрируем таски
 	grunt.registerTask('default', tasks);
+	grunt.registerTask('inno', inno);
 }
