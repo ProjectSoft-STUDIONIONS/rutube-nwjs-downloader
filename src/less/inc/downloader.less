@@ -10,7 +10,7 @@
 	position: relative;
 	.loader {
 		position: absolute;
-		opacity: 0;
+		opacity: 1;
 		visibility: hidden;
 		top: 0px;
 		left: 0px;
@@ -18,11 +18,24 @@
 		height: 100%;
 		right: 0px;
 		bottom: 0px;
-		background-color: #FFFFFF;
 		z-index: 10;
+		&::before {
+			content: "";
+			display: block;
+			position: absolute;
+			right: 50px;
+			bottom: 50px;
+			width: 40px;
+			height: 40px;
+			background-image: var(--rutube_loader); //@rutube_loader;
+			background-repeat: no-repeat;
+			background-position: center;
+			background-size: contain;
+
+		}
 		&.load {
 			visibility: visible;
-			opacity: 0;
+			opacity: 1;
 		}
 	}
 	.image {
@@ -71,9 +84,13 @@
 				padding: 10px 15px;
 				border-radius: 6px;
 				border-width: 0;
+				text-overflow: ellipsis;
 				&,
 				&:focus-visible {
 					outline: unset;
+				}
+				&:disabled {
+					color: #fff;
 				}
 			}
 		}
@@ -83,6 +100,11 @@
 				text-overflow: ellipsis;
 				overflow: hidden;
 				margin-bottom: 1em;
+			}
+			.btn {
+				&:disabled {
+					color: #fff;
+				}
 			}
 		}
 		&_progress {
@@ -99,6 +121,16 @@
 					background-color: white;
 					border-radius: 6px;
 					overflow: hidden;
+				}
+			}
+		}
+		&_result {
+			white-space: nowrap;
+			text-overflow: ellipsis;
+			overflow: hidden;
+			a {
+				&.events {
+					pointer-events: none;
 				}
 			}
 		}

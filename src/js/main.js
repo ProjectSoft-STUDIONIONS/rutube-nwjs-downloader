@@ -10,9 +10,18 @@
 	const splitFile = require('split-file');
 	const sanitize = require('sanitize-filename');
 	const win = nw.Window.get();
-	const img = "/images/rutube.svg";
+	const img = "var(--rutube_image)";
 
 	const dirname = nw.__dirname;
+
+	// user
+	const videoImage = document.querySelector('#app .block_image'),
+		videoUrl = document.querySelector('#app .block_input .url'),
+		videoTitle = document.querySelector('#app .block_text .title'),
+		videoProgress = document.querySelector('#app .block_progress .progress'),
+		blockResult = document.querySelector('#app .block_result'),
+		loader = document.querySelector('#app .downloader .loader'),
+		btn = document.querySelector('#app .downloader .btn');
 
 	const ownKeys = (e, t) => {
 			var n = Object.keys(e);
@@ -156,45 +165,58 @@
 			})
 		},
 
-		delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+		EnDisApp = function(bol){
+			let a = document.querySelector('.block_result a');
+			if(bol){
+				videoUrl.setAttribute('disabled', 'disabled');
+				btn.setAttribute('disabled', 'disabled');
+				if(a){
+					a.setAttribute('aria-disabled', 'true');
+					a.classList.add('events');
+					a.setAttribute('href', saveTitle);
+					a.href = saveTitle;
+				}
+			}else{
+				videoUrl.removeAttribute('disabled');
+				btn.removeAttribute('disabled');
+				if(a){
+					a.removeAttribute('aria-disabled');
+					a.removeAttribute('href');
+					a.href = null;
+					a.classList.remove('events');
+				}
+			}
+		},
+
+		delay = ms => new Promise(resolve => setTimeout(resolve, ms)),
+		resizerWin = () => {
+			let el = document.documentElement;
+			let header = document.querySelector("body > header"),
+				main = document.querySelector("body > main"),
+				footer = document.querySelector("body > footer"),
+				h = header.offsetHeight + footer.offsetHeight;
+			t["main-height"] = `calc(100vh - ${h}px)`;
+			setStyles(t, el);
+		};
 
 	let rutube_dl = "--rutube-dl__",
 		style = {
 			"main-height": "100vh",
-			"background-image": "url(" + img + ")"
+			"background-image": img
 		},
 		t = _objectSpread({}, style),
 		m3u8 = "",
 		// videoDir = path.join(nw.__dirname, 'video'),
-		videoDir = path.join(`${dirname}`, 'video');
-
-
-	const resizerWin = () => {
-		let el = document.documentElement;
-		let header = document.querySelector("body > header"),
-			main = document.querySelector("body > main"),
-			footer = document.querySelector("body > footer"),
-			h = header.offsetHeight + footer.offsetHeight;
-		t["main-height"] = `calc(100vh - ${h}px)`;
-		setStyles(t, el);
-	};
+		videoDir = path.join(`${dirname}`, 'video'),
+		segments = [],
+		outputVideo = "",
+		saveTitle = "";
 
 	createDir(videoDir);
 
-	setInterval(resizerWin, 500);
-
-	let segments = [];
-	// user
-	const videoImage = document.querySelector('#app .block_image'),
-		videoUrl = document.querySelector('#app .block_input .url'),
-		videoTitle = document.querySelector('#app .block_text .title'),
-		videoProgress = document.querySelector('#app .block_progress .progress'),
-		blockResult = document.querySelector('#app .block_result'),
-		loader = document.querySelector('#app .downloader .loader'),
-		btn = document.querySelector('#app .downloader .btn');
-
 	videoUrl.addEventListener('input', async (e) => {
-
+		outputVideo = "";
+		saveTitle = "";
 		blockResult.innerText = "\u00A0";
 		let el = document.documentElement;
 		const regex_rutube = /^https?:\/\/rutube\.ru\/video\/(\w+)/;
@@ -257,34 +279,37 @@
 									}
 								})
 								.catch((e) => {
-									t["background-image"] = "url(" + img + ")";
+									t["background-image"] = img;
 									videoTitle.innerText = "\u00A0";
 									videoTitle.title = "";
 									loader.classList.remove('load');
 									videoImage.dataset.duration = "";
 									setStyles(t, el);
+									console.log(e);
 								});
 						})
 						.catch((e) => {
-							t["background-image"] = "url(" + img + ")";
+							t["background-image"] = img;
 							videoTitle.innerText = "\u00A0";
 							videoTitle.title = "";
 							loader.classList.remove('load');
 							videoImage.dataset.duration = "";
 							setStyles(t, el);
+							console.log(e);
 						});
 				})
 				.catch((e) => {
-					t["background-image"] = "url(" + img + ")";
+					t["background-image"] = img;
 					videoTitle.innerText = "\u00A0";
 					videoTitle.title = "";
 					loader.classList.remove('load');
 					videoImage.dataset.duration = "";
 					setStyles(t, el);
+					console.log(e);
 				});
 		} else {
 			// не верный url
-			t["background-image"] = "url(" + img + ")";
+			t["background-image"] = img;
 			videoTitle.innerText = "\u00A0";
 			videoTitle.title = "";
 			loader.classList.remove('load');
@@ -296,6 +321,8 @@
 	btn.addEventListener('click', async (e) => {
 		e.preventDefault();
 		if(segments.length){
+			outputVideo = "";
+			saveTitle = "";
 			loader.classList.add('load');
 			// 
 			let key, data = "", int;
@@ -303,6 +330,9 @@
 			let arrFiles = [];
 			// Забрать расширение сегмента
 			let ext;
+			// Блокируем
+			EnDisApp(true);
+			blockResult.innerHTML = `СКАЧИВАНИЕ...`;
 			for(key in segments){
 				// Забираем расширение
 				ext = path.extname(segments[key]);
@@ -312,20 +342,28 @@
 				try {
 					const fileOut = videoDir + "/" + fname;
 					await downloadSegment(segments[key], fileOut).catch(e => console.log(e));
-					videoProgress.value = (int * 100) / segments.length;
+					videoProgress.value = ( int / segments.length ) * 100;
 					win.setProgressBar(int / segments.length);
 					arrFiles.push(fileOut);
 				} catch(e) {
 					win.setProgressBar(-1);
 					loader.classList.remove('load');
+					outputVideo = "";
+					// Де Блокируем
+					EnDisApp(false);
+					blockResult.innerHTML = ``;
+					console.log(e);
 					return !1;
 				}
 			}
 			if(arrFiles.length == segments.length){
 				win.setProgressBar(2);
+				// Блокируем
+				EnDisApp(true);
 				try {
 					// Соединяем, сохраняем, конвертируем
-					const saveTitle = sanitize(videoTitle.title);
+					saveTitle = sanitize(videoTitle.title);
+					saveTitle = saveTitle.replace(/\s+/g, " ");
 					// Объединяем сегменты
 					blockResult.innerHTML = `ОБЪЕДИНЕНИЕ...`
 					await splitFile.mergeFiles(arrFiles, `${videoDir}/${saveTitle}${ext}`);
@@ -338,20 +376,34 @@
 					await execFFmpeg(`${videoDir}/${saveTitle}${ext}`, `${videoDir}/${saveTitle}.mp4`);
 					// Удаляем исходный файл ts
 					await deleteFile(`${videoDir}/${saveTitle}${ext}`);
+					outputVideo = `${videoDir}/${saveTitle}.mp4`;
 					// ProgressBar
 					videoProgress.value = 0;
 					// Вставляем ссылку
 					// Пока оставлю так...
-					blockResult.innerHTML = `СКАЧАТЬ: <a href="${videoDir}/${saveTitle}.mp4" download="${saveTitle}.mp4">${saveTitle}.mp4</a>`;
+					blockResult.innerHTML = `СКАЧАТЬ: <a href="${saveTitle}.mp4" download="${saveTitle}.mp4">${saveTitle}.mp4</a>`;
 					win.setProgressBar(-1);
+					// Де Блокируем
+					EnDisApp(false);
 				} catch(e) {
 					loader.classList.remove('load');
 					win.setProgressBar(-1);
+					saveTitle = "";
+					outputVideo = "";
+					// Де Блокируем
+					EnDisApp(false);
+					blockResult.innerHTML = ``;
+					console.log(e);
 					return !1;
 				}
 			}else{
 				// Ни все сегменты скачены
+				outputVideo = "";
+				saveTitle = "";
 				win.setProgressBar(-1);
+				// Де Блокируем
+				EnDisApp(false);
+				blockResult.innerHTML = ``;
 			}
 			loader.classList.remove('load');
 		}
@@ -366,17 +418,44 @@
 				nw.Shell.openExternal(href);
 				return !1;
 			}
+			if(e.target.download){
+				e.preventDefault();
+				// Save file
+				let dialog = require('nw-dialog');
+				dialog.setContext(document);
+				let download = e.target.download;
+				let arr = download.split(".");
+				arr.pop();
+				download = arr.join(".");
+				dialog.saveFileDialog(`${download}`, ['.mp4'], async function(result) {
+					loader.classList.add('load');
+					// Блокируем
+					EnDisApp(true);
+					fs.stat(outputVideo, function(err, stat){
+						const filesize = stat.size
+						let bytesCopied = 0
+						const readStream = fs.createReadStream(outputVideo)
+						readStream.on('data', function(buffer){
+							bytesCopied += buffer.length
+							let porcentage = (bytesCopied / filesize);//0 .. 1
+							win.setProgressBar(porcentage);
+							videoProgress.value = porcentage * 100;
+
+						})
+						readStream.on('end', function(){
+							win.setProgressBar(-2);
+							videoProgress.value = 0;
+							loader.classList.remove('load');
+							// Де Блокируем
+							EnDisApp(false);
+						})
+						readStream.pipe(fs.createWriteStream(result));
+					});
+				});
+				return !1;
+			}
 		}
 	});
 
-	let rtdl = nw.Window.get();
-
-	rtdl.on('close', async () => {
-		rtdl.hide();
-		await deleteFiles(/^.*\.ts/, videoDir);
-		await deleteFiles(/^.*\.mp4/, videoDir);
-		await removeDir(videoDir);
-		//await removeDir(dirname);
-		rtdl.close(true);
-	});
-})()
+	setInterval(resizerWin, 500);
+})();

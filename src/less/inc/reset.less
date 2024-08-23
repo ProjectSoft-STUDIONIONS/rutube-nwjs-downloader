@@ -1,6 +1,10 @@
+@rutube_image: data-uri("../images/rutube.svg");
+@rutube_loader: data-uri("../images/tail-spin.svg");
+
 :root {
 	--box-shadow: 0 0 7px #000000;
-	--rutube-dl__background-image: url("/images/rutube.svg");
+	--rutube_image: @rutube_image;
+	--rutube_loader: @rutube_loader;
 }
 .box-shadow() {
 	box-shadow: var(--box-shadow);
@@ -94,7 +98,7 @@ body {
 				display: inline-block;
 				vertical-align: middle;
 				content: "";
-				background-image: data-uri('../images/rutube.svg');
+				background-image: var(--rutube_image);
 				background-position: center center;
 				background-repeat: no-repeat;
 				background-size: contain;
