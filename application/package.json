@@ -2,7 +2,6 @@
 	"name": "RuTube-DL",
 	"version": "3.0.0",
 	"description": "Скачивание видео с RuTube на NW.js",
-	"buildDate": "24 August 2024 12:54:54",
 	"author": "ProjectSoft",
 	"homepage": "https://projectsoft.ru/",
 	"license": "MIT",

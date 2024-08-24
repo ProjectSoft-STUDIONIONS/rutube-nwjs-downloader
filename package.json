@@ -7,7 +7,7 @@
 		"preinstall": "npm i -g less pug-cli bower && bower install && cd application && npm i",
 		"inst": "npm i",
 		"test": "grunt -v",
-		"build": "grunt build -v"
+		"build": "grunt build"
 	},
 	"repository": {
 		"type": "git",
