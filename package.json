@@ -4,8 +4,10 @@
 	"description": "Скачивание видео с RuTube на NW.js",
 	"main": "Gruntfile.js",
 	"scripts": {
-		"test": "npm i",
-		"build": "grunt webfont && grunt"
+		"preinstall": "npm i -g less pug-cli bower && bower install && cd application && npm i",
+		"inst": "npm i",
+		"test": "grunt -v",
+		"build": "grunt build -v"
 	},
 	"repository": {
 		"type": "git",
