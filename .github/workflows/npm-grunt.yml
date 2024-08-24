@@ -28,10 +28,10 @@ jobs:
         npm rum inst
         npm run build
     - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: install/RuTube-DL-Setup.exe
-          tag: ${{ github.ref_name }}
-          overwrite: true
-          file_glob: true
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: install/RuTube-DL-Setup.exe
+        tag: ${{ github.ref_name }}
+        overwrite: true
+        file_glob: true
