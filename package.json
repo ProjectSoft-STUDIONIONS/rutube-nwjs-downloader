@@ -31,7 +31,6 @@
 		"grunt-exec": "3.0.0",
 		"grunt-replace": "2.0.2",
 		"grunt-ttf2woff2": "<=1.0.1",
-		"grunt-webfont": "1.7.2",
 		"grunt-zip": "1.0.0",
 		"innosetup-compiler": "github:ProjectSoft-STUDIONIONS/node-innosetup-compiler",
 		"less-plugin-clean-css": "1.6.0",
