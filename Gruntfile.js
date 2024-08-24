@@ -245,5 +245,5 @@ module.exports = function(grunt) {
 	inno.push('innosetup');
 	// Регистрируем таски
 	grunt.registerTask('default', tasks);
-	grunt.registerTask('inno', inno);
+	grunt.registerTask('build', inno);
 }
