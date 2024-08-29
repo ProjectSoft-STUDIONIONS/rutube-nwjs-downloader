@@ -137,6 +137,7 @@ module.exports = function(grunt) {
 			},
 			main: {
 				src: [
+					'src/js/rutube-video.js',
 					'src/js/ressizer.js',
 					'src/js/main.js',
 				],

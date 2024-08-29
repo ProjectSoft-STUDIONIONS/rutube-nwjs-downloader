@@ -1,4 +1,75 @@
 (() => {
+
+	customElements.define("rutube-video", RutubeVideo);
+
+	const app = document.querySelector('#app'),
+		addBtn = document.querySelector('.btn-add'),
+		downBtn = document.querySelector('.btn-download'),
+		DownChanegeDesabled = function() {
+			let rutube = Array.from(document.querySelectorAll('rutube-video')),
+				rv,
+				load;
+			downBtn.removeAttribute('disabled');
+			for(rv of rutube){
+				load = rv.getAttribute('load') || "unload";
+				if(load == "unload"){
+					downBtn.setAttribute('disabled', 'disabled');
+					break;
+				}
+			}
+		};
+
+	addBtn.addEventListener('click', (e) => {
+		e.stopPropagation();
+		e.preventDefault();
+		let load = true;
+		let rtv = document.querySelectorAll('rutube-video');
+		let rutube;
+		downBtn.setAttribute('disabled', 'disabled');
+		rtv.forEach((a, b, c) => {
+			let attr = a.getAttribute('load') || "unload";
+			if(attr == "unload"){
+				load = false;
+			}
+		});
+		// Нельзя добавлять если не загружен ссылкой
+		if(!load){
+			downBtn.setAttribute('disabled', 'disabled');
+		}else{
+			// Добавляем
+			rutube = document.createElement('rutube-video');
+			app.append(rutube);
+		}
+		// Выход
+		return !1;
+	});
+
+	downBtn.addEventListener('click', (e) => {
+		e.stopPropagation();
+		e.preventDefault();
+		// Здесь запустить
+		return !1;
+	});
+
+	document.addEventListener('rutube-video:input', (e) => {
+		e.stopPropagation();
+		e.preventDefault();
+		// Проверяем условия для кнопки скачивания
+		DownChanegeDesabled();
+		return !1;
+	});
+
+	document.addEventListener('rutube-video:close', (e) => {
+		e.stopPropagation();
+		e.preventDefault();
+		// Удаляем
+		e.target.parentNode.removeChild(e.target);
+		// Проверяем условия для кнопки скачивания
+		DownChanegeDesabled();
+		return !1;
+	});
+
+	/**
 	// NodeJS
 	const fs = require('node:fs');
 	const path = require('node:path');
@@ -458,4 +529,5 @@
 	});
 
 	setInterval(resizerWin, 500);
+	**/
 })();
