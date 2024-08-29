@@ -17,6 +17,9 @@
 					break;
 				}
 			}
+			if(!rutube.length){
+				downBtn.setAttribute('disabled', 'disabled');
+			}
 		};
 
 	addBtn.addEventListener('click', (e) => {
