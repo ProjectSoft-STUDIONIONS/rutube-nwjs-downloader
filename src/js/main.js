@@ -1,11 +1,23 @@
 (() => {
 
+	// NodeJS
+	const fs = require('node:fs');
+	const path = require('node:path');
+	const stream = require('node:stream');
+	const util = require('node:util');
+	const { Blob } = require('node:buffer');
+	const splitFile = require('split-file');
+	const dirname = nw.__dirname;
+	// Регистрируем свой веб компонент
 	customElements.define("rutube-video", RutubeVideo);
-
+		// Контейн6р
 	const app = document.querySelector('#app'),
+		// Кнопка добавления
 		addBtn = document.querySelector('.btn-add'),
+		// Кнопка скачивания
 		downBtn = document.querySelector('.btn-download'),
-		DownChanegeDesabled = function() {
+		// Функция проверки состояний компонентов и определения доступности копки скачивания
+		DownChanegeDisabled = function() {
 			let rutube = Array.from(document.querySelectorAll('rutube-video')),
 				rv,
 				load;
@@ -20,6 +32,72 @@
 			if(!rutube.length){
 				downBtn.setAttribute('disabled', 'disabled');
 			}
+		},
+		AddChangeDisabled = function(value = false) {
+			if(typeof value == "boolean") {
+				if(value){
+					addBtn.setAttribute('disabled', 'disabled');
+					return !1;
+				}else{
+					addBtn.removeAttribute('disabled');
+					return !1;
+				}
+			}
+			return !1;
+		},
+		downloadSegment = async function(input, output) {
+			return new Promise((resolve, reject) => {
+				fetch(input)
+					.then(response => response.arrayBuffer())
+					.then(buffer => {
+						let buff = Buffer.from(buffer);
+						fs.writeFileSync(output, buff);
+						resolve(output);
+					}).catch((e) => {
+						reject(e);
+					});
+			});
+		},
+
+		deleteFiles = async function(reg, dir){
+			return new Promise((resolve, reject) => {
+				dir = path.normalize(dir) + "/";
+				fs.readdirSync(dir).filter(f => reg.exec(f)).forEach(f => {
+					try{
+						fs.unlinkSync(dir + f);
+					}catch(e){
+						reject(false);
+					}
+				});
+				resolve(true);
+			})
+		},
+
+		deleteFile = async function(file) {
+			return new Promise((resolve, reject) => {
+				fs.stat(file, function(err, stat) {
+					if (err == null) {
+						fs.unlinkSync(file);
+						resolve(true);
+					} else if (err.code === 'ENOENT') {
+						resolve(true);
+					} else {
+						reject(false);
+					}
+				});
+			})
+		},
+
+		execFFmpeg = async function (input, output) {
+			return new Promise((resolve, reject) => {
+				const ffmpeg = path.join(dirname, 'bin', 'ffmpeg.exe');
+				const child = require('node:child_process')
+					.exec(`"${ffmpeg}" -hide_banner -y -i "${input}" -vcodec copy -acodec copy "${output}"`);
+				child.stdout.pipe(process.stdout);
+				child.on('exit', () => {
+					resolve(true);
+				});
+			})
 		};
 
 	addBtn.addEventListener('click', (e) => {
@@ -31,6 +109,8 @@
 		downBtn.setAttribute('disabled', 'disabled');
 		rtv.forEach((a, b, c) => {
 			let attr = a.getAttribute('load') || "unload";
+			a.setAttribute('link', "");
+			a.setAttribute('text', "");
 			if(attr == "unload"){
 				load = false;
 			}
@@ -42,23 +122,90 @@
 			// Добавляем
 			rutube = document.createElement('rutube-video');
 			app.append(rutube);
+			console.log(rutube.segments);
 		}
 		// Выход
 		return !1;
 	});
 
-	downBtn.addEventListener('click', (e) => {
+	downBtn.addEventListener('click', async (e) => {
 		e.stopPropagation();
 		e.preventDefault();
+		let rutvs = Array.from(document.querySelectorAll('rutube-video')),
+			rtv;
+		for(rtv of rutvs){
+			let attr = rtv.getAttribute('load') || "unload";
+			rtv.setAttribute('link', "");
+			rtv.setAttribute('text', "");
+			if(attr == "unload"){
+				return !1;
+				break;
+			}
+		}
+		AddChangeDisabled(true);
+		downBtn.setAttribute('disabled', 'disabled');
+		for(rtv of rutvs){
+			rtv.setAttribute('disabled', 'disabled');
+		}
 		// Здесь запустить
+		for(rtv of rutvs){
+			let arrFiles = [],
+			key, int, ext,
+			segments = JSON.parse(JSON.stringify(rtv.segments));
+			while(segments.length){
+				rtv.setAttribute('text', "СКАЧИВАНИЕ...");
+				// Забираем расширение
+				ext = path.extname(segments[0]);
+				// По сути здесь можно качать и сохранять
+				int = parseInt(rtv.segments.length - segments.length) + 1;
+				let fname = 'segment-' + `${int}`.padStart(10, '0') + ext;
+				try {
+					let fileOut = path.join(rtv.__dirname, fname);
+					arrFiles.push(fileOut);
+					await downloadSegment(segments[0], fileOut).catch(e => console.log('downloadSegment', e));
+					let prg = (int / rtv.segments.length) * 100;
+					rtv.setAttribute('progress', prg);
+				} catch(e) {
+					
+					console.log('try downloadSegment', e);
+					return !1;
+				}
+				segments.shift();
+			}
+			let info = rtv.downLoadInfo;
+			let dir = rtv.__dirname;
+			let tName = rtv.__name + ext;
+			let mp4Name = rtv.__name + ".mp4"
+			// Объединяем сегменты
+			rtv.setAttribute('text', "ОБЪЕДИНЕНИЕ...");
+			await splitFile.mergeFiles(arrFiles, path.join(dir, tName));
+			// Удаляем сегменты
+			await deleteFiles(/^segment-.*\.ts/, rtv.__dirname);
+			// Удаляем все mp4 если есть
+			await deleteFiles(/^.*\.mp4/, rtv.__dirname);
+			// Запускаем ffmpeg для преобразования исходного ts файла в mp4
+			rtv.setAttribute('text', "КОНВЕРТИРОВАНИЕ...");
+			await execFFmpeg(path.join(dir, tName), path.join(dir, mp4Name));
+			// Удаляем исходный файл ts
+			await deleteFile(path.join(dir, tName));
+			rtv.setAttribute('progress', 0);
+			rtv.setAttribute('disabled', 'enabled');
+			rtv.setAttribute('text', "");
+			rtv.setAttribute('link', mp4Name);
+		}
+		addBtn.removeAttribute('disabled');
+		if(rutvs.length) {
+			downBtn.removeAttribute('disabled');
+		}
 		return !1;
 	});
 
 	document.addEventListener('rutube-video:input', (e) => {
 		e.stopPropagation();
 		e.preventDefault();
+		// console.log(e.target.segments);
 		// Проверяем условия для кнопки скачивания
-		DownChanegeDesabled();
+		DownChanegeDisabled();
 		return !1;
 	});
 
@@ -68,8 +215,62 @@
 		// Удаляем
 		e.target.parentNode.removeChild(e.target);
 		// Проверяем условия для кнопки скачивания
-		DownChanegeDesabled();
+		DownChanegeDisabled();
 		return !1;
+	});
+
+	document.addEventListener('rutube-video:download', (e) => {
+		e.stopPropagation();
+		e.preventDefault();
+		// Проверяем клик по ссылке в RutubeVideo
+		let info = e.target.downLoadInfo;
+		let file = info.path;
+		// Скачать файл
+		let dialog = require('nw-dialog');
+		dialog.setContext(document);
+		let download = info.__name;
+		// let arr = download.split(".");
+		// arr.pop();
+		// download = arr.join(".");
+		dialog.saveFileDialog(`${download}`, ['.mp4'], async function(result) {
+			// loader.classList.add('load');
+			// Блокируем
+			// EnDisApp(true);
+			fs.stat(file, function(err, stat){
+				const filesize = stat.size
+				let bytesCopied = 0
+				const readStream = fs.createReadStream(file)
+				readStream.on('data', function(buffer){
+					bytesCopied += buffer.length
+					let porcentage = (bytesCopied / filesize) * 100;//0 .. 1
+					e.target.setAttribute('progress', porcentage);
+					// win.setProgressBar(porcentage);
+					// videoProgress.value = porcentage * 100;
+				})
+				readStream.on('end', function(){
+					e.target.setAttribute('progress', 0);
+					// win.setProgressBar(-2);
+					// videoProgress.value = 0;
+					// loader.classList.remove('load');
+					// Де Блокируем
+					// EnDisApp(false);
+				})
+				readStream.pipe(fs.createWriteStream(result));
+			});
+		});
+		console.log('DownLoad', e.target.downLoadInfo);
+		return !1;
+	});
+
+	document.querySelector('body').addEventListener('click', (e) => {
+		if(e.target.tagName == "A"){
+			if(e.target.target == "_blank"){
+				e.preventDefault();
+				let href = e.target.href;
+				nw.Shell.openExternal(href);
+				return !1;
+			}
+		}
 	});
 
 	/**
@@ -80,8 +281,8 @@
 	const stream = require('node:stream');
 	const util = require('node:util');
 	const { Blob } = require('node:buffer');
-	const m3u8Parser = require('m3u8-parser');
 	const splitFile = require('split-file');
+	const m3u8Parser = require('m3u8-parser');
 	const sanitize = require('sanitize-filename');
 	const win = nw.Window.get();
 	const img = "var(--rutube_image)";

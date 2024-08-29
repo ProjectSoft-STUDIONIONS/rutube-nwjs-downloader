@@ -3,12 +3,12 @@ html(lang="ru")
 	head
 		meta(charset="utf-8")
 		meta(name="viewport" content="width=device-width, initial-scale=1.0")
-		meta(name="theme-color" media="(prefers-color-scheme: dark)" content="black")
 		base(href="/")
 		link(rel="stylesheet" type="text/css" href="css/main.css")
 	body
 		header.clearfix
 			h1.text-center
+				a(href="https://rutube.ru/" target="_blank")
 				|Скачать видео
 				.buttons
 					button(disabled).btn.btn-download.icon-download
@@ -48,4 +48,5 @@ html(lang="ru")
 				=" "
 				a(href="https://github.com/ProjectSoft-STUDIONIONS" target="_blank")
 					|ProjectSoft
+		script(src="js/rutube-video.js")
 		script(src="js/main.js")
