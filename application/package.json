@@ -1,6 +1,6 @@
 {
 	"name": "RuTube-DL",
-	"version": "3.5.0",
+	"version": "4.0.0",
 	"description": "Скачивание видео с RuTube на NW.js",
 	"author": "ProjectSoft <projectsoft2009@yandex.ru>",
 	"homepage": "https://github.com/ProjectSoft-STUDIONIONS/rutube-nwjs-downloader",
@@ -24,15 +24,15 @@
 		"position": "center",
 		"resizable": true,
 		"visible": true,
-		"min_width": 600,
+		"min_width": 800,
 		"min_height": 520,
-		"width": 600,
+		"width": 800,
 		"height": 520
 	},
 	"dependencies": {
-		"m3u8-parser": "^7.1.0",
-		"nw-dialog": "^1.0.7",
-		"sanitize-filename": "latest",
-		"split-file": "^2.3.0"
+		"m3u8-parser": "7.1.0",
+		"nw-dialog": "1.0.7",
+		"sanitize-filename": "1.6.3",
+		"split-file": "2.3.0"
 	}
 }

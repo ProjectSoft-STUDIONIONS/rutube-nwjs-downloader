@@ -9,6 +9,7 @@
 .box-shadow() {
 	box-shadow: var(--box-shadow);
 }
+
 * {
 	font-family: "Roboto", sans-serif;
 	&,
@@ -18,6 +19,7 @@
 		user-select: none;
 	}
 }
+
 .clearfix {
 	&::before,
 	&::after {
@@ -28,6 +30,14 @@
 		clear: both;
 	}
 }
+
+button {
+	cursor: pointer;
+	&:disabled {
+		cursor: not-allowed;
+	}
+}
+
 a {
 	&,
 	&:hover,
@@ -36,16 +46,23 @@ a {
 		outline: unset !important;
 		color: #ffffff;
 	}
+	* {
+		pointer-events: none;
+	}
 }
+
 p {
 	margin-top: unset;
 }
+
 input {
 	user-select: auto;
 }
+
 h1, h2, h3, h4, h5, h6, strong, b {
 	font-weight: 500;
 }
+
 body {
 	padding: 0;
 	margin: 0;
@@ -74,6 +91,7 @@ body {
 	> footer {
 		flex: 0 0 auto;
 		.box-shadow();
+		position: sticky;
 	}
 	> main {
 		flex: 1 0 auto;
@@ -89,28 +107,53 @@ body {
 		background-color: #1C232B;
 		color: #FFFFFF;
 	}
-	header {
+	> header {
+		top: 0;
 		> h1 {
 			white-space: nowrap;
-			&::before {
-				height: 40px;
-				width: 140px;
-				display: inline-block;
-				vertical-align: middle;
-				content: "";
-				background-image: var(--rutube_image);
-				background-position: center center;
-				background-repeat: no-repeat;
-				background-size: contain;
-				margin-bottom: 4px;
-				margin-right: 15px;
+			a {
 				position: absolute;
 				top: 20px;
 				left: 15px;
+				text-decoration: none;
+				&::before {
+					height: 40px;
+					width: 140px;
+					display: inline-block;
+					vertical-align: middle;
+					content: "";
+					background-image: var(--rutube_image);
+					background-position: center center;
+					background-repeat: no-repeat;
+					background-size: contain;
+					margin-bottom: 4px;
+					margin-right: 15px;
+				}
 			}
+			.buttons {
+				position: absolute;
+				top: 20px;
+				right: 15px;
+				> .btn {
+					text-decoration: none !important;
+					display: inline-block;
+					margin-right: 15px;
+					font-size: 1em;
+					vertical-align: middle;
+					font-size: 1em;
+					&:last-child {
+						margin-right: unset;
+					}
+				}
+			}
+			
 		}
 	}
+	> footer {
+		bottom: 0;
+	}
 }
+
 .row {
 	.clearfix();
 	margin-left: -15px;

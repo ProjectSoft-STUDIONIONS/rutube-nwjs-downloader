@@ -88,6 +88,12 @@ module.exports = function(grunt) {
 						dest: "build/"
 					},
 				]
+			},
+			app: {
+				expand: true,
+				cwd: 'src/js/',
+				src: 'rutube-video.js',
+				dest: 'application/js/',
 			}
 		},
 		ttf2woff2: {
@@ -228,6 +234,7 @@ module.exports = function(grunt) {
 		'clean:all',
 		'concat:main',
 		'uglify',
+		'copy:app',
 		'ttf2woff2',
 		'less',
 		'cssmin',

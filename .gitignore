@@ -1,6 +1,9 @@
 *.txt
 *-lock.*
 *.sublime-workspace
+*.ini
+*.inf
+
 application/**
 test/
 tests/

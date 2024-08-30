@@ -8,11 +8,18 @@ html(lang="ru")
 	body
 		header.clearfix
 			h1.text-center
+				a(href="https://rutube.ru/" target="_blank")
 				|Скачать видео
+				.buttons
+					button(disabled).btn.btn-download.icon-download
+					button.btn.btn-add.icon-add
 		main.clearfix
 			.wrapper.row
 				#app
-					.downloader
+					//- rutube-video
+					//- rutube-video
+					//- rutube-video
+					//- .downloader
 						.image
 							.block_image
 						.links
@@ -41,4 +48,5 @@ html(lang="ru")
 				=" "
 				a(href="https://github.com/ProjectSoft-STUDIONIONS" target="_blank")
 					|ProjectSoft
+		script(src="js/rutube-video.js")
 		script(src="js/main.js")
