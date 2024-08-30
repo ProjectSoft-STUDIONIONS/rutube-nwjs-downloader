@@ -141,7 +141,7 @@ class RutubeVideo extends HTMLElement {
 		}
 		.btn-close {
 			position: absolute;
-			right: -20px;
+			right: -18px;
 			top: -12px;
 		}
 		.downloader {
@@ -335,18 +335,19 @@ class RutubeVideo extends HTMLElement {
 							this.#url.setAttribute(newValue, newValue);
 							this.#close.setAttribute(newValue, newValue);
 							this.#loader.classList.add('load');
+							this.#span.innerText = "СКАЧИВАНИЕ ...";
 							break;
 						case "enabled":
 							this.#url.removeAttribute(name);
 							this.#close.removeAttribute(name);
 							this.#loader.classList.remove('load');
+							this.#span.innerText = "";
 							break;
 					}
 				}
 				break;
 			case "progress":
 				this.#progress.setAttribute('value', newValue);
-				console.log(newValue)
 				break;
 			case "link":
 				if(newValue.length){
@@ -493,7 +494,6 @@ class RutubeVideo extends HTMLElement {
 	}
 
 	connectedCallback() {
-		console.log("Ready 😎");
 		let __self = this;
 		this.#image = this.shadowRoot.querySelector('.block_image');
 		this.#url = this.shadowRoot.querySelector('.url');
@@ -522,6 +522,7 @@ class RutubeVideo extends HTMLElement {
 		this.setAttribute('text', '');
 		this.#name = "";
 		this.createDir();
+		console.log("Ready 😎");
 	}
 
 	disconnectedCallback() {

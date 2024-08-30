@@ -122,7 +122,6 @@
 			// Добавляем
 			rutube = document.createElement('rutube-video');
 			app.append(rutube);
-			console.log(rutube.segments);
 		}
 		// Выход
 		return !1;
@@ -153,7 +152,7 @@
 			key, int, ext,
 			segments = JSON.parse(JSON.stringify(rtv.segments));
 			while(segments.length){
-				rtv.setAttribute('text', "СКАЧИВАНИЕ...");
+				rtv.setAttribute('text', "СКАЧИВАНИЕ ...");
 				// Забираем расширение
 				ext = path.extname(segments[0]);
 				// По сути здесь можно качать и сохранять
@@ -162,12 +161,13 @@
 				try {
 					let fileOut = path.join(rtv.__dirname, fname);
 					arrFiles.push(fileOut);
+					rtv.setAttribute('text', `СКАЧИВАНИЕ ${fname} ...`);
 					await downloadSegment(segments[0], fileOut).catch(e => console.log('downloadSegment', e));
 					let prg = (int / rtv.segments.length) * 100;
 					rtv.setAttribute('progress', prg);
 				} catch(e) {
-					
 					console.log('try downloadSegment', e);
+					__self.setAttribute('text', `ОШИБКА СКАЧИВАНИЯ ${fname} ...`);
 					return !1;
 				}
 				segments.shift();
@@ -178,24 +178,37 @@
 			let mp4Name = rtv.__name + ".mp4"
 			// Объединяем сегменты
 			rtv.setAttribute('text', "ОБЪЕДИНЕНИЕ...");
-			await splitFile.mergeFiles(arrFiles, path.join(dir, tName));
+			await splitFile.mergeFiles(arrFiles, path.join(dir, tName)).catch((e) => {
+				__self.setAttribute('text', 'ОШИБКА ОБЪЕДИНЕНИЯ *.ts ...');
+			});
 			// Удаляем сегменты
-			await deleteFiles(/^segment-.*\.ts/, rtv.__dirname);
+			await deleteFiles(/^segment-.*\.ts/, rtv.__dirname).catch((e) => {
+				__self.setAttribute('text', 'ОШИБКА УДАЛЕНИЯ *.ts ...');
+			});
 			// Удаляем все mp4 если есть
-			await deleteFiles(/^.*\.mp4/, rtv.__dirname);
+			await deleteFiles(/^.*\.mp4/, rtv.__dirname).catch((e) => {
+				__self.setAttribute('text', 'ОШИБКА УДАЛЕНИЯ *.mp4 ...');
+			});
 			// Запускаем ffmpeg для преобразования исходного ts файла в mp4
 			rtv.setAttribute('text', "КОНВЕРТИРОВАНИЕ...");
-			await execFFmpeg(path.join(dir, tName), path.join(dir, mp4Name));
+			await execFFmpeg(path.join(dir, tName), path.join(dir, mp4Name)).catch((e) => {
+				__self.setAttribute('text', `ОШИБКА КОНВЕРТИРОВАНИ В ${mp4Name}...`);
+			});
 			// Удаляем исходный файл ts
-			await deleteFile(path.join(dir, tName));
+			await deleteFile(path.join(dir, tName)).catch((e) => {
+				__self.setAttribute('text', `ОШИБКА УДАЛЕНИЯ ${tName} ...`);
+			});
 			rtv.setAttribute('progress', 0);
-			rtv.setAttribute('disabled', 'enabled');
+			//rtv.setAttribute('disabled', 'enabled');
 			rtv.setAttribute('text', "");
 			rtv.setAttribute('link', mp4Name);
 		}
 		addBtn.removeAttribute('disabled');
 		if(rutvs.length) {
 			downBtn.removeAttribute('disabled');
+			for(rtv of rutvs) {
+				rtv.setAttribute('disabled', 'enabled');
+			}
 		}
 		return !1;
 	});
@@ -203,7 +216,6 @@
 	document.addEventListener('rutube-video:input', (e) => {
 		e.stopPropagation();
 		e.preventDefault();
-		// console.log(e.target.segments);
 		// Проверяем условия для кнопки скачивания
 		DownChanegeDisabled();
 		return !1;
@@ -223,42 +235,44 @@
 		e.stopPropagation();
 		e.preventDefault();
 		// Проверяем клик по ссылке в RutubeVideo
-		let info = e.target.downLoadInfo;
+		let __self = e.target;
+		// Инфо объект
+		let info = __self.downLoadInfo;
+		// Ссылка до файла, который сохранить
 		let file = info.path;
-		// Скачать файл
+		// Скачать файл. Диалог
 		let dialog = require('nw-dialog');
 		dialog.setContext(document);
-		let download = info.__name;
-		// let arr = download.split(".");
-		// arr.pop();
-		// download = arr.join(".");
+		// Имя Файла
+		let download = __self.__name;
 		dialog.saveFileDialog(`${download}`, ['.mp4'], async function(result) {
-			// loader.classList.add('load');
-			// Блокируем
-			// EnDisApp(true);
-			fs.stat(file, function(err, stat){
-				const filesize = stat.size
-				let bytesCopied = 0
-				const readStream = fs.createReadStream(file)
-				readStream.on('data', function(buffer){
-					bytesCopied += buffer.length
-					let porcentage = (bytesCopied / filesize) * 100;//0 .. 1
-					e.target.setAttribute('progress', porcentage);
-					// win.setProgressBar(porcentage);
-					// videoProgress.value = porcentage * 100;
-				})
-				readStream.on('end', function(){
-					e.target.setAttribute('progress', 0);
-					// win.setProgressBar(-2);
-					// videoProgress.value = 0;
-					// loader.classList.remove('load');
-					// Де Блокируем
-					// EnDisApp(false);
-				})
-				readStream.pipe(fs.createWriteStream(result));
-			});
+			// Скачиваем (копируем) в выбранное место
+			try {
+				fs.stat(file, function(err, stat){
+					__self.setAttribute('disabled', 'disabled');
+					__self.setAttribute('text', "ЗАПИСЬ ....");
+					const filesize = stat.size
+					let bytesCopied = 0
+					const readStream = fs.createReadStream(file)
+					readStream.on('data', function(buffer){
+						bytesCopied += buffer.length
+						let porcentage = (bytesCopied / filesize) * 100;//0 .. 1
+						__self.setAttribute('progress', porcentage);
+					})
+					readStream.on('end', function(){
+						__self.setAttribute('progress', 0);
+						__self.setAttribute('disabled', 'enabled');
+						__self.setAttribute('text', '');
+					})
+					readStream.pipe(fs.createWriteStream(result));
+				});
+			}catch(e){
+				console.log(e);
+				__self.setAttribute('text', 'ОШИБКА ЗАПИСИСИ...');
+			}finally {
+				__self.setAttribute('disabled', 'enabled');
+			}
 		});
-		console.log('DownLoad', e.target.downLoadInfo);
 		return !1;
 	});
 

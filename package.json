@@ -1,6 +1,6 @@
 {
 	"name": "rutube-nwjs-downloader",
-	"version": "3.5.0",
+	"version": "4.0.0",
 	"description": "Скачивание видео с RuTube на NW.js",
 	"main": "Gruntfile.js",
 	"scripts": {
