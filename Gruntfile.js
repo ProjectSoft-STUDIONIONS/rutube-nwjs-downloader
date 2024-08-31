@@ -117,10 +117,13 @@ module.exports = function(grunt) {
 					}
 				},
 				files: {
-					'test/css/test-main.css': [
+					'test/css/main.css': [
 						'src/less/main.less',
 						'bower_components/Croppie/croppie.css'
-					]
+					],
+					'test/css/component.css': [
+						'src/less/component.less',
+					],
 				}
 			},
 		},
@@ -132,7 +135,10 @@ module.exports = function(grunt) {
 			main: {
 				files: {
 					'application/css/main.css': [
-						'test/css/test-main.css'
+						'test/css/main.css'
+					],
+					'application/css/component.css': [
+						'test/css/component.css'
 					]
 				}
 			},
@@ -166,6 +172,7 @@ module.exports = function(grunt) {
 		pug: {
 			main: {
 				options: {
+					doctype: 'html',
 					pretty: '',// '\t',
 					separator: '',// '\n'
 					data: function(dest, src) {
@@ -177,6 +184,7 @@ module.exports = function(grunt) {
 				},
 				files: {
 					"application/index.html": ['src/pug/index.pug'],
+					"application/tpl/component.html": ['src/pug/component.pug']
 				},
 			},
 		},

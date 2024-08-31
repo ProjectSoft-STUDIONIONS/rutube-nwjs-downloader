@@ -151,6 +151,7 @@
 			let arrFiles = [],
 			key, int, ext,
 			segments = JSON.parse(JSON.stringify(rtv.segments));
+			rtv.setAttribute('progress', '0');
 			while(segments.length){
 				rtv.setAttribute('text', "СКАЧИВАНИЕ ...");
 				// Забираем расширение
@@ -161,13 +162,13 @@
 				try {
 					let fileOut = path.join(rtv.__dirname, fname);
 					arrFiles.push(fileOut);
-					rtv.setAttribute('text', `СКАЧИВАНИЕ ${fname} ...`);
+					rtv.setAttribute('text', `СКАЧИВАНИЕ ${path.basename(segments[0])} ...`);
 					await downloadSegment(segments[0], fileOut).catch(e => console.log('downloadSegment', e));
 					let prg = (int / rtv.segments.length) * 100;
 					rtv.setAttribute('progress', prg);
 				} catch(e) {
 					console.log('try downloadSegment', e);
-					__self.setAttribute('text', `ОШИБКА СКАЧИВАНИЯ ${fname} ...`);
+					__self.setAttribute('text', `ОШИБКА СКАЧИВАНИЯ ${path.basename(segments[0])} ...`);
 					return !1;
 				}
 				segments.shift();
@@ -198,7 +199,7 @@
 			await deleteFile(path.join(dir, tName)).catch((e) => {
 				__self.setAttribute('text', `ОШИБКА УДАЛЕНИЯ ${tName} ...`);
 			});
-			rtv.setAttribute('progress', 0);
+			rtv.setAttribute('progress', '');
 			//rtv.setAttribute('disabled', 'enabled');
 			rtv.setAttribute('text', "");
 			rtv.setAttribute('link', mp4Name);
@@ -249,28 +250,36 @@
 			// Скачиваем (копируем) в выбранное место
 			try {
 				fs.stat(file, function(err, stat){
-					__self.setAttribute('disabled', 'disabled');
-					__self.setAttribute('text', "ЗАПИСЬ ....");
-					const filesize = stat.size
-					let bytesCopied = 0
-					const readStream = fs.createReadStream(file)
-					readStream.on('data', function(buffer){
-						bytesCopied += buffer.length
-						let porcentage = (bytesCopied / filesize) * 100;//0 .. 1
-						__self.setAttribute('progress', porcentage);
-					})
-					readStream.on('end', function(){
-						__self.setAttribute('progress', 0);
+					if(!err){
+						__self.setAttribute('progress', '0');
+						__self.setAttribute('disabled', 'disabled');
+						__self.setAttribute('text', "ЗАПИСЬ ....");
+						const filesize = stat.size
+						let bytesCopied = 0
+						const readStream = fs.createReadStream(file)
+						readStream.on('data', function(buffer){
+							bytesCopied += buffer.length
+							let porcentage = (bytesCopied / filesize) * 100;//0 .. 1
+							__self.setAttribute('progress', porcentage);
+						})
+						readStream.on('end', function(){
+							__self.setAttribute('progress', '');
+							__self.setAttribute('disabled', 'enabled');
+							__self.setAttribute('text', '');
+						})
+						readStream.pipe(fs.createWriteStream(result));
+					}else{
+						console.log(err);
+						__self.setAttribute('progress', '');
 						__self.setAttribute('disabled', 'enabled');
-						__self.setAttribute('text', '');
-					})
-					readStream.pipe(fs.createWriteStream(result));
+						__self.setAttribute('text', 'ОШИБКА ЗАПИСИСИ...');
+					}
 				});
 			}catch(e){
 				console.log(e);
-				__self.setAttribute('text', 'ОШИБКА ЗАПИСИСИ...');
-			}finally {
+				__self.setAttribute('progress', '');
 				__self.setAttribute('disabled', 'enabled');
+				__self.setAttribute('text', 'ОШИБКА ЗАПИСИСИ...');
 			}
 		});
 		return !1;

@@ -1,19 +1,17 @@
 .btn {
-	&-add,
-	&-close,
-	&-download {
-		background-color: transparent;
-		appearance: none;
-		border: unset;
-		color: #fff;
-		text-shadow: 1px 1px 1px #797979, -1px -1px 1px #000;
-		&,
-		&:focus,
-		&:focus-visible {
-			outline: unset;
-		}
-		&:disabled {
-			color: #333333;
-		}
+	background-color: transparent;
+	appearance: none;
+	border: unset;
+	color: #fff;
+	text-shadow: 1px 1px 1px #797979, -1px -1px 1px #000;
+	pointer-events: auto;
+	&,
+	&:focus,
+	&:focus-visible {
+		outline: unset;
+	}
+	&:disabled {
+		color: #333333;
+		pointer-events: none;
 	}
 }

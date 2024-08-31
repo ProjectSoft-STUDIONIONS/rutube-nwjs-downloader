@@ -1,5 +1,5 @@
 #app {
-	max-width: 1200px;
+	max-width: 100%;
 	margin-left: auto;
 	margin-right: auto;
 	min-height: var(--rutube-dl__main-height);
@@ -24,5 +24,10 @@
 		padding-left: unset;
 		padding-right: unset;
 		background-color: unset;
+	}
+	rutube-video {
+		&:last-child {
+			margin-bottom: unset !important;
+		}
 	}
 }

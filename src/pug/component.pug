@@ -1,0 +1,22 @@
+style
+	|@import url(css/component.css);
+slot
+div.downloader
+	div.image
+		div.block_image
+	div.links
+		div.block_input
+			input.url(type="text" value="" placeholder="URL видео RUTUBE")
+		div.block_text.text-right
+			div.title.text-left
+				|&#160;
+	div.progress_bar
+		div.block_progress
+			div.block_progress_text.text-center
+			progress.progress(min="0" max="100")
+		div.block_result.text-right
+			span.hidden
+			|&#160;
+			a.hidden
+	div.loader
+	button.btn.btn-close.icon-close(title="УДАЛИТЬ")
