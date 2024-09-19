@@ -175,8 +175,9 @@
 			}
 			let info = rtv.downLoadInfo;
 			let dir = rtv.__dirname;
-			let tName = rtv.__name + ext;
-			let mp4Name = rtv.__name + ".mp4"
+			//let tName = rtv.__name + ext;
+			let tName = rtv.UUID + ext;
+			let mp4Name = rtv.UUID + ".mp4";
 			// Объединяем сегменты
 			rtv.setAttribute('text', "ОБЪЕДИНЕНИЕ...");
 			await splitFile.mergeFiles(arrFiles, path.join(dir, tName)).catch((e) => {
@@ -197,12 +198,12 @@
 			});
 			// Удаляем исходный файл ts
 			await deleteFile(path.join(dir, tName)).catch((e) => {
-				__self.setAttribute('text', `ОШИБКА УДАЛЕНИЯ ${tName} ...`);
+				__self.setAttribute('text', `ОШИБКА УДАЛЕНИЯ ...`);
 			});
 			rtv.setAttribute('progress', '');
 			//rtv.setAttribute('disabled', 'enabled');
 			rtv.setAttribute('text', "");
-			rtv.setAttribute('link', mp4Name);
+			rtv.setAttribute('link', rtv.__name);
 		}
 		addBtn.removeAttribute('disabled');
 		if(rutvs.length) {
@@ -240,7 +241,8 @@
 		// Инфо объект
 		let info = __self.downLoadInfo;
 		// Ссылка до файла, который сохранить
-		let file = info.path;
+		//let file = info.path;
+		let file = path.join(__self.__dirname, __self.UUID + ".mp4");
 		// Скачать файл. Диалог
 		let dialog = require('nw-dialog');
 		dialog.setContext(document);

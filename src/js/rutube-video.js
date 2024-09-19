@@ -198,7 +198,7 @@ class RutubeVideo extends HTMLElement {
 			customEvent;
 		switch(event.type){
 			case "input":
-				const regex = /^https?:\/\/rutube\.ru\/video\/(\w+)/;
+				const regex = /^https?:\/\/rutube\.ru\/(?:shorts|video)\/(\w+)/;
 				let url = __self.#url.value,
 					m, pls;
 				__self.#name = '';
@@ -320,7 +320,7 @@ class RutubeVideo extends HTMLElement {
 		this.downLink.classList.add('hidden');
 		this.#url.addEventListener('input', this);
 		this.#close.addEventListener('click', this);
-		this.downLink.addEventListener('click', this.clickLinkEvent);
+		this.downLink.addEventListener('click', this.clickLinkEvent.bind(this));
 		this.setAttribute('load', 'unload');
 		this.setAttribute('disabled', 'enabled');
 		this.setAttribute('link', '');
@@ -333,7 +333,7 @@ class RutubeVideo extends HTMLElement {
 	disconnectedCallback() {
 		this.#url.removeEventListener('input', this);
 		this.#close.removeEventListener('click', this);
-		this.downLink.removeEventListener('click', this.clickLinkEvent);
+		this.downLink.removeEventListener('click', this.clickLinkEvent.bind(this));
 		this.removeDir();
 		this.#dirname = "";
 		console.log("Clean 😎");
