@@ -151,6 +151,7 @@
 			let arrFiles = [],
 			key, int, ext,
 			segments = JSON.parse(JSON.stringify(rtv.segments));
+			rtv.setAttribute('progress', '0');
 			while(segments.length){
 				rtv.setAttribute('text', "СКАЧИВАНИЕ ...");
 				// Забираем расширение
@@ -161,21 +162,22 @@
 				try {
 					let fileOut = path.join(rtv.__dirname, fname);
 					arrFiles.push(fileOut);
-					rtv.setAttribute('text', `СКАЧИВАНИЕ ${fname} ...`);
+					rtv.setAttribute('text', `СКАЧИВАНИЕ ${path.basename(segments[0])} ...`);
 					await downloadSegment(segments[0], fileOut).catch(e => console.log('downloadSegment', e));
 					let prg = (int / rtv.segments.length) * 100;
 					rtv.setAttribute('progress', prg);
 				} catch(e) {
 					console.log('try downloadSegment', e);
-					__self.setAttribute('text', `ОШИБКА СКАЧИВАНИЯ ${fname} ...`);
+					__self.setAttribute('text', `ОШИБКА СКАЧИВАНИЯ ${path.basename(segments[0])} ...`);
 					return !1;
 				}
 				segments.shift();
 			}
 			let info = rtv.downLoadInfo;
 			let dir = rtv.__dirname;
-			let tName = rtv.__name + ext;
-			let mp4Name = rtv.__name + ".mp4"
+			//let tName = rtv.__name + ext;
+			let tName = rtv.UUID + ext;
+			let mp4Name = rtv.UUID + ".mp4";
 			// Объединяем сегменты
 			rtv.setAttribute('text', "ОБЪЕДИНЕНИЕ...");
 			await splitFile.mergeFiles(arrFiles, path.join(dir, tName)).catch((e) => {
@@ -196,12 +198,12 @@
 			});
 			// Удаляем исходный файл ts
 			await deleteFile(path.join(dir, tName)).catch((e) => {
-				__self.setAttribute('text', `ОШИБКА УДАЛЕНИЯ ${tName} ...`);
+				__self.setAttribute('text', `ОШИБКА УДАЛЕНИЯ ...`);
 			});
-			rtv.setAttribute('progress', 0);
+			rtv.setAttribute('progress', '');
 			//rtv.setAttribute('disabled', 'enabled');
 			rtv.setAttribute('text', "");
-			rtv.setAttribute('link', mp4Name);
+			rtv.setAttribute('link', rtv.__name);
 		}
 		addBtn.removeAttribute('disabled');
 		if(rutvs.length) {
@@ -239,7 +241,8 @@
 		// Инфо объект
 		let info = __self.downLoadInfo;
 		// Ссылка до файла, который сохранить
-		let file = info.path;
+		//let file = info.path;
+		let file = path.join(__self.__dirname, __self.UUID + ".mp4");
 		// Скачать файл. Диалог
 		let dialog = require('nw-dialog');
 		dialog.setContext(document);
@@ -249,28 +252,36 @@
 			// Скачиваем (копируем) в выбранное место
 			try {
 				fs.stat(file, function(err, stat){
-					__self.setAttribute('disabled', 'disabled');
-					__self.setAttribute('text', "ЗАПИСЬ ....");
-					const filesize = stat.size
-					let bytesCopied = 0
-					const readStream = fs.createReadStream(file)
-					readStream.on('data', function(buffer){
-						bytesCopied += buffer.length
-						let porcentage = (bytesCopied / filesize) * 100;//0 .. 1
-						__self.setAttribute('progress', porcentage);
-					})
-					readStream.on('end', function(){
-						__self.setAttribute('progress', 0);
+					if(!err){
+						__self.setAttribute('progress', '0');
+						__self.setAttribute('disabled', 'disabled');
+						__self.setAttribute('text', "ЗАПИСЬ ....");
+						const filesize = stat.size
+						let bytesCopied = 0
+						const readStream = fs.createReadStream(file)
+						readStream.on('data', function(buffer){
+							bytesCopied += buffer.length
+							let porcentage = (bytesCopied / filesize) * 100;//0 .. 1
+							__self.setAttribute('progress', porcentage);
+						})
+						readStream.on('end', function(){
+							__self.setAttribute('progress', '');
+							__self.setAttribute('disabled', 'enabled');
+							__self.setAttribute('text', '');
+						})
+						readStream.pipe(fs.createWriteStream(result));
+					}else{
+						console.log(err);
+						__self.setAttribute('progress', '');
 						__self.setAttribute('disabled', 'enabled');
-						__self.setAttribute('text', '');
-					})
-					readStream.pipe(fs.createWriteStream(result));
+						__self.setAttribute('text', 'ОШИБКА ЗАПИСИСИ...');
+					}
 				});
 			}catch(e){
 				console.log(e);
-				__self.setAttribute('text', 'ОШИБКА ЗАПИСИСИ...');
-			}finally {
+				__self.setAttribute('progress', '');
 				__self.setAttribute('disabled', 'enabled');
+				__self.setAttribute('text', 'ОШИБКА ЗАПИСИСИ...');
 			}
 		});
 		return !1;

@@ -8,37 +8,18 @@ html(lang="ru")
 	body
 		header.clearfix
 			h1.text-center
-				a(href="https://rutube.ru/" target="_blank")
+				a(href="https://rutube.ru/" target="_blank" title="Перейти на RUTUBE")
 				|Скачать видео
 				.buttons
-					button(disabled).btn.btn-download.icon-download
-					button.btn.btn-add.icon-add
+					button(disabled title="СКАЧАТЬ").btn.btn-download.icon-download
+					button.btn.btn-add.icon-add(title="ДОБАВИТЬ")
 		main.clearfix
 			.wrapper.row
 				#app
-					//- rutube-video
-					//- rutube-video
-					//- rutube-video
-					//- .downloader
-						.image
-							.block_image
-						.links
-							.block_input
-								input.url(type="text" value="" placeholder="https://rutube.ru/video/1a4521bd43df1a02f2f3b71ff8875496/")
-							.block_text.text-right
-								.title.text-left
-									|&#160;
-								button.btn.icon-download
-						.progress
-							.block_progress
-								progress.progress(min="0" max="100" value="0")
-							.block_result.text-right
-								|&#160;
-						.loader
 
 		footer.clearfix
 			p.footer-block.footer_left.text-left
-				a.icon-github(href="https://github.com/ProjectSoft-STUDIONIONS/rutube-nwjs-downloader/releases/latest" target="_blank")
+				a.icon-github(href="https://github.com/ProjectSoft-STUDIONIONS/rutube-nwjs-downloader/releases/latest" target="_blank" title="Перейьи в репозиторий приложения")
 					span
 						|Rutube DL
 			p.footer-block.footer_center.text-center
@@ -46,7 +27,7 @@ html(lang="ru")
 			p.footer-block.footer_right.text-right
 				|Developed by:
 				=" "
-				a(href="https://github.com/ProjectSoft-STUDIONIONS" target="_blank")
+				a(href="https://github.com/ProjectSoft-STUDIONIONS" target="_blank" title="Перейти на страницу GitHub разработчика")
 					|ProjectSoft
 		script(src="js/rutube-video.js")
 		script(src="js/main.js")

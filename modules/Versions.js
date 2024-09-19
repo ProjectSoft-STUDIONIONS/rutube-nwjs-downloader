@@ -1,12 +1,14 @@
 module.exports = function(grunt) {
 	const fs = require("fs");
 	const path = require("path");
-	
-	
 
-	grunt.registerMultiTask('version_edit', 'Version Update RuTube-DL', async function() {
+	grunt.registerMultiTask('version_edit', 'Version Update', async function() {
 		var done = this.async();
-		const pkg = this.options().pkg;
+		const pkg = this.options().pkg || {
+			version: '1.0.0',
+			comments: '',
+			description: ''
+		};
 		grunt.file.write("version.iss", `#define RuTubeDlAppVersion "${pkg.version}"`);
 		let versApp = grunt.file.readJSON('application/package.json');
 		versApp.version = pkg.version;
