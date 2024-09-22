@@ -1,15 +1,18 @@
 @icomoon-font-family: "Rutube-DL";
 @icomoon-font-path: "/fonts";
 
-@icon-close: "\e900";
-@icon-download: "\e901";
-@icon-github: "\e902";
-@icon-hack: "\e903";
-@icon-add: "\e904";
+@selectors: {
+	close: "\e900";
+	download: "\e901";
+	github: "\e902";
+	hack: "\e903";
+	add: "\e904";
+	save: "\e905";
+}
 
 @font-face {
 	font-family: '@{icomoon-font-family}';
-	src: url('@{icomoon-font-path}/@{icomoon-font-family}.woff2?wlrhvg') format('woff2');
+	src: url('@{icomoon-font-path}/@{icomoon-font-family}.woff2?@{hash}') format('woff2');
 	font-weight: normal;
 	font-style: normal;
 	font-display: block;
@@ -26,29 +29,10 @@
 	-webkit-font-smoothing: antialiased;
 }
 
-.icon-close {
-  &:before {
-    content: @icon-close; 
-  }
-}
-.icon-download {
-  &:before {
-    content: @icon-download; 
-  }
-}
-.icon-github {
-  &:before {
-    content: @icon-github; 
-  }
-}
-.icon-hack {
-  &:before {
-    content: @icon-hack; 
-  }
-}
-.icon-add {
-  &:before {
-    content: @icon-add; 
-  }
-}
-
+each(@selectors, {
+	.icon-@{key} {
+		&::before {
+			content: @value;
+		}
+	}
+});

@@ -4,19 +4,17 @@ html(lang="ru")
 		meta(charset="utf-8")
 		meta(name="viewport" content="width=device-width, initial-scale=1.0")
 		base(href="/")
-		link(rel="stylesheet" type="text/css" href="css/main.css")
+		link(rel="stylesheet" type="text/css" href="css/main.css?" + hash)
 	body
 		header.clearfix
 			h1.text-center
 				a(href="https://rutube.ru/" target="_blank" title="Перейти на RUTUBE")
 				|Скачать видео
 				.buttons
-					button(disabled title="СКАЧАТЬ").btn.btn-download.icon-download
 					button.btn.btn-add.icon-add(title="ДОБАВИТЬ")
 		main.clearfix
 			.wrapper.row
 				#app
-
 		footer.clearfix
 			p.footer-block.footer_left.text-left
 				a.icon-github(href="https://github.com/ProjectSoft-STUDIONIONS/rutube-nwjs-downloader/releases/latest" target="_blank" title="Перейьи в репозиторий приложения")
@@ -29,5 +27,5 @@ html(lang="ru")
 				=" "
 				a(href="https://github.com/ProjectSoft-STUDIONIONS" target="_blank" title="Перейти на страницу GitHub разработчика")
 					|ProjectSoft
-		script(src="js/rutube-video.js")
-		script(src="js/main.js")
+		script(src="js/rutube-video.js?" + hash)
+		script(src="js/main.js?" + hash)
