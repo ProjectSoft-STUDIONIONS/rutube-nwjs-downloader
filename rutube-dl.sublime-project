@@ -5,5 +5,35 @@
 			"path": ".",
 			"name": "Скачать видео с RuTube на NW.js"
 		}
+	],
+	"build_systems":
+	[
+		{
+			"name": "Test Project",
+			"working_dir": "$project_path",
+			"shell_cmd": "npm run test && echo Finish Test Project",
+			"file_patterns": [
+				"*.less",
+				"*.js",
+				"*.pug",
+				"*.json",
+				"*.svg",
+				"*.template",
+				"*.sublime-project"
+			]
+		},
+		{
+			"name": "Build Project",
+			"working_dir": "$project_path",
+			"shell_cmd": "npm run build && echo Finish Build Project",
+			"file_patterns": [
+				"*.less",
+				"*.js",
+				"*.pug",
+				"*.json",
+				"*.svg",
+				"*.template"
+			]
+		}
 	]
 }

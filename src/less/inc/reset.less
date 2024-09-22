@@ -79,8 +79,6 @@ body {
 	> header,
 	> main,
 	> footer {
-		color: #333;
-		background-color: #fff;
 		position: relative;
 	}
 	> header {
@@ -92,12 +90,15 @@ body {
 		flex: 0 0 auto;
 		.box-shadow();
 		position: sticky;
+		z-index: 2000;
 	}
 	> main {
 		flex: 1 0 auto;
 		max-height: var(--rutube-dl__main-height);
 		overflow-y: auto;
 		overflow-x: hidden;
+		position: relative;
+		z-index: 1;
 	}
 	> header,
 	> main,

@@ -1,1 +1,1 @@
-#define RuTubeDlAppVersion "4.0.1"
+#define RuTubeDlAppVersion "5.0.0"

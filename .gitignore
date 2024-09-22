@@ -3,6 +3,11 @@
 *.sublime-workspace
 *.ini
 *.inf
+*.zip
+*.rar
+*.7z
+*.ai
+*.psd
 
 application/**
 test/

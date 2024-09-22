@@ -28,9 +28,10 @@ module.exports = function(grunt) {
 
 	const path = require('path'),
 		uniqid = function () {
-			let result = URL.createObjectURL(new Blob([])).slice(-36).replace(/-/g, '');
+			let result = URL.createObjectURL(new Blob([])).slice(-36).split("-").join("");
 			return result;
-		};
+		},
+		hash = uniqid();
 
 	var gc = {
 			sdk: target ? 'normal' : 'sdk',
@@ -110,16 +111,13 @@ module.exports = function(grunt) {
 					plugins: [
 						
 					],
-					data: function(dest, src) {
-						return {
-							"hash": uniqid(),
-						}
+					modifyVars: {
+						"hash": hash,
 					}
 				},
 				files: {
 					'test/css/main.css': [
-						'src/less/main.less',
-						'bower_components/Croppie/croppie.css'
+						'src/less/main.less'
 					],
 					'test/css/component.css': [
 						'src/less/component.less',
@@ -177,7 +175,7 @@ module.exports = function(grunt) {
 					separator: '',// '\n'
 					data: function(dest, src) {
 						return {
-							"hash": uniqid(),
+							"hash": hash,
 							"target": gc.sdk,
 						}
 					},
