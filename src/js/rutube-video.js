@@ -6,7 +6,6 @@ class RutubeVideo extends HTMLElement {
 	static util = require('node:util');
 	static Blob = require('node:buffer').Blob;
 	static URL_CONST = require('node:url');
-	static sanitize = require('sanitize-filename');
 	static splitFile = require('split-file');
 	
 	#image;
@@ -77,6 +76,22 @@ class RutubeVideo extends HTMLElement {
 		return (h == "00" ? "" : h + ":") + m + ":" + s;
 	}
 
+	static sanitize(input, replacement = '') {
+		if (typeof input !== 'string') {
+			throw new Error('Input must be string');
+		}
+		if (typeof replacement !== 'string') {
+			throw new Error('Replacement must be string');
+		}
+		return input.replace(/[\/\?<>\\:\*\|"]/g, replacement)
+			.replace(/[\x00-\x1f\x80-\x9f]/g, replacement)
+			.replace(/^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?$/i, replacement)
+			.replace(/[\s]+/g, ' ')
+			.replace(/[-]+/g, '-')
+			.replace(/[_]+/g, '_')
+			.substring(0, 250);;
+	}
+
 	handleError() {
 		this.#name = '';
 		this.#title.title = "";
@@ -129,22 +144,32 @@ class RutubeVideo extends HTMLElement {
 				__self.#title.innerHTML = "\u00A0";
 				__self.#image.dataset.duration = "";
 				__self.#segments = [];
-				__self.#btnDown.setAttribute("disabled", "disabled");
-				__self.#btnSave.setAttribute("disabled", "disabled");
 				// Удаляем или создаём папку
 				__self.removeDir();
 				__self.createDir();
 				if ((m = regex.exec(url)) !== null) {
+					__self.#btnDown.setAttribute("disabled", "disabled");
+					__self.#btnSave.setAttribute("disabled", "disabled");
 					__self.#loader.classList.add('load');
 					__self.#blockInput.classList.add('disabled');
 					__self.#image.removeAttribute('style');
+					__self.#span.innerText = ``;
+					// Удаляем все ts если есть
+					await __self.deleteFiles(/^.*\.ts/, __self.__dirname).catch((e) => {
+						__self.#span.innerText = 'ОШИБКА УДАЛЕНИЯ *.ts';
+					});
+					// Удаляем все mp4 если есть
+					await __self.deleteFiles(/^.*\.mp4/, __self.__dirname).catch((e) => {
+						__self.#span.innerText = 'ОШИБКА УДАЛЕНИЯ *.mp4';
+					});
+
 					pls = `https://rutube.ru/api/play/options/${m[1]}/?no_404=true&referer=https%3A%2F%2Frutube.ru`;
 					// Получаем информацию о видео
 					fetch(pls).then(res => res.json()).then((json) => {
 						__self.#image.dataset.duration = RutubeVideo.formatTime(json.duration);
 						__self.#title.title = __self.#title.innerText = json.title;
 						__self.#image.setAttribute('style', `--rutube_image: url(${json.thumbnail_url});`);
-						__self.#name = RutubeVideo.sanitize(json.title).replace(/\s+/g, ' ');
+						__self.#name = RutubeVideo.sanitize(json.title);
 						// Получаем информацию о плейлисте
 						fetch(json["video_balancer"]["m3u8"]).then(res => res.text()).then(text => {
 							// Плейлист с m3u8 файлами
@@ -200,6 +225,7 @@ class RutubeVideo extends HTMLElement {
 					__self.#blockInput.classList.remove('disabled');
 					__self.#image.removeAttribute('style');
 					__self.#name = '';
+					__self.#span.innerText = ``;
 					__self.#title.title = "";
 					__self.#title.innerHTML = "\u00A0";
 					__self.#image.dataset.duration = "";
@@ -470,4 +496,3 @@ class RutubeVideo extends HTMLElement {
 		this.sdk && console.log("Clean 😎");
 	}
 }
-

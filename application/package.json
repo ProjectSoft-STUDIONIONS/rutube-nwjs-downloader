@@ -32,7 +32,6 @@
 	"dependencies": {
 		"m3u8-parser": "7.1.0",
 		"nw-dialog": "1.0.7",
-		"sanitize-filename": "1.6.3",
 		"split-file": "2.3.0"
 	}
 }
