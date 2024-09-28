@@ -156,11 +156,11 @@ class RutubeVideo extends HTMLElement {
 					__self.#span.innerText = ``;
 					// Удаляем все ts если есть
 					await __self.deleteFiles(/^.*\.ts/, __self.__dirname).catch((e) => {
-						__self.#span.innerText = 'ОШИБКА УДАЛЕНИЯ *.ts';
+						//__self.#span.innerText = 'ОШИБКА УДАЛЕНИЯ *.ts';
 					});
 					// Удаляем все mp4 если есть
 					await __self.deleteFiles(/^.*\.mp4/, __self.__dirname).catch((e) => {
-						__self.#span.innerText = 'ОШИБКА УДАЛЕНИЯ *.mp4';
+						//__self.#span.innerText = 'ОШИБКА УДАЛЕНИЯ *.mp4';
 					});
 
 					pls = `https://rutube.ru/api/play/options/${m[1]}/?no_404=true&referer=https%3A%2F%2Frutube.ru`;
@@ -280,17 +280,17 @@ class RutubeVideo extends HTMLElement {
 			// Объединяем сегменты
 			this.#span.innerText = "ОБЪЕДИНЕНИЕ...";
 			await RutubeVideo.splitFile.mergeFiles(arrFiles, RutubeVideo.path.join(dir, tName)).catch((e) => {
-				this.#span.innerText = 'ОШИБКА ОБЪЕДИНЕНИЯ *.ts';
+				//this.#span.innerText = 'ОШИБКА ОБЪЕДИНЕНИЯ *.ts';
 				error = true;
 			});
 			// Удаляем сегменты
 			await this.deleteFiles(/^segment-.*\.ts/, this.__dirname).catch((e) => {
-				this.#span.innerText = 'ОШИБКА УДАЛЕНИЯ *.ts';
+				//this.#span.innerText = 'ОШИБКА УДАЛЕНИЯ *.ts';
 				error = true;
 			});
 			// Удаляем все mp4 если есть
 			await this.deleteFiles(/^.*\.mp4/, this.__dirname).catch((e) => {
-				this.#span.innerText = 'ОШИБКА УДАЛЕНИЯ *.mp4';
+				//this.#span.innerText = 'ОШИБКА УДАЛЕНИЯ *.mp4';
 				error = true;
 			});
 			// Запускаем ffmpeg для преобразования исходного ts файла в mp4
