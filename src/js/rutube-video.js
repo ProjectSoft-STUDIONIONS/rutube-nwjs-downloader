@@ -10,6 +10,7 @@ class RutubeVideo extends HTMLElement {
 	static splitFile = require('split-file');
 	
 	#image;
+	#blockInput;
 	#url;
 	#title;
 	#progress;
@@ -135,6 +136,8 @@ class RutubeVideo extends HTMLElement {
 				__self.createDir();
 				if ((m = regex.exec(url)) !== null) {
 					__self.#loader.classList.add('load');
+					__self.#blockInput.classList.add('disabled');
+					__self.#image.removeAttribute('style');
 					pls = `https://rutube.ru/api/play/options/${m[1]}/?no_404=true&referer=https%3A%2F%2Frutube.ru`;
 					// Получаем информацию о видео
 					fetch(pls).then(res => res.json()).then((json) => {
@@ -166,23 +169,36 @@ class RutubeVideo extends HTMLElement {
 									__self.#segments[b] = urlPrefix + a.uri
 								});
 								__self.#loader.classList.remove('load');
+								__self.#blockInput.classList.remove('disabled');
 								if(__self.#segments.length) {
 									// Готовы к скачиванию
 									__self.#btnDown.removeAttribute("disabled");
 								}
 							}).catch((err) => {
 								// Обработать ошибки
+								__self.#loader.classList.remove('load');
+								__self.#blockInput.classList.remove('disabled');
+								__self.#image.removeAttribute('style');
 								__self.sdk && console.log(err);
 							});
 						}).catch((err) => {
 							// Обработать ошибки
+							__self.#loader.classList.remove('load');
+							__self.#blockInput.classList.remove('disabled');
+							__self.#image.removeAttribute('style');
 							__self.sdk && console.log(err);
 						});
 					}).catch((err) => {
 						// Обработать ошибки
+						__self.#loader.classList.remove('load');
+						__self.#blockInput.classList.remove('disabled');
+						__self.#image.removeAttribute('style');
 						__self.sdk && console.log(err);
 					});
 				}else{
+					__self.#loader.classList.remove('load');
+					__self.#blockInput.classList.remove('disabled');
+					__self.#image.removeAttribute('style');
 					__self.#name = '';
 					__self.#title.title = "";
 					__self.#title.innerHTML = "\u00A0";
@@ -202,7 +218,9 @@ class RutubeVideo extends HTMLElement {
 		let __self = this;
 		this.#close.setAttribute("disabled", "disabled");
 		if(this.#segments.length) {
-			this.#loader.classList.add('load');
+			//this.#loader.classList.add('load');
+			this.#loader.classList.add('loading');
+			this.#blockInput.classList.add('disabled');
 			this.#btnDown.setAttribute('disabled', "disabled");
 			this.#btnSave.setAttribute('disabled', "disabled");
 			this.#url.setAttribute('disabled', "disabled");
@@ -266,6 +284,8 @@ class RutubeVideo extends HTMLElement {
 			this.#close.removeAttribute("disabled");
 			this.#url.removeAttribute('disabled');
 			this.#loader.classList.remove('load');
+			this.#loader.classList.remove('loading');
+			this.#blockInput.classList.remove('disabled');
 			prgresult.innerText = '';
 			!error && (this.#span.innerText = `${this.__name}.mp4`);
 		}else{
@@ -275,6 +295,8 @@ class RutubeVideo extends HTMLElement {
 			this.#close.removeAttribute("disabled");
 			this.#url.removeAttribute('disabled');
 			this.#loader.classList.remove('load');
+			this.#loader.classList.remove('loading');
+			this.#blockInput.classList.remove('disabled');
 			prgresult.innerText = '';
 			this.#span.innerText = '';
 		}
@@ -321,10 +343,12 @@ class RutubeVideo extends HTMLElement {
 		// Имя Файла
 		let download = this.__name;
 		dialog.saveFileDialog(`${download}`, ['.mp4'], async function(result) {
-			__self.#loader.classList.add('load');
+			__self.#loader.classList.add('loading');
+			__self.#blockInput.classList.add('disabled');
 			__self.#btnDown.setAttribute('disabled', "disabled");
 			__self.#btnSave.setAttribute('disabled', "disabled");
 			__self.#url.setAttribute('disabled', "disabled");
+			__self.#close.setAttribute("disabled", "disabled");
 			// Скачиваем (копируем) в выбранное место
 			try {
 				RutubeVideo.fs.stat(file, function(err, stat){
@@ -345,9 +369,12 @@ class RutubeVideo extends HTMLElement {
 							prgresult.innerText = "";
 							__self.#progress.setAttribute('value', 0);
 							__self.#loader.classList.remove('load');
+							__self.#loader.classList.remove('loading');
+							__self.#blockInput.classList.remove('disabled');
 							__self.#btnDown.removeAttribute('disabled');
 							__self.#btnSave.removeAttribute('disabled');
 							__self.#url.removeAttribute('disabled');
+							__self.#close.removeAttribute('disabled');
 							__self.#span.innerText = `${__self.__name}.mp4`;
 						})
 						readStream.pipe(RutubeVideo.fs.createWriteStream(result));
@@ -355,10 +382,13 @@ class RutubeVideo extends HTMLElement {
 						prgresult.innerText = "";
 						__self.#progress.setAttribute('value', 0);
 						__self.#loader.classList.remove('load');
+						__self.#loader.classList.remove('loading');
+						__self.#blockInput.classList.remove('disabled');
 						__self.#btnDown.removeAttribute('disabled');
 						__self.#btnSave.removeAttribute('disabled');
 						__self.#url.removeAttribute('disabled');
-						__self.#span.innerText = 'ОШИБКА ЗАПИСИСИ';
+						__self.#close.removeAttribute('disabled');
+						__self.#span.innerText = 'ОШИБКА ЗАПИСИ';
 					}
 				});
 			}catch(e){
@@ -366,10 +396,13 @@ class RutubeVideo extends HTMLElement {
 				prgresult.innerText = "";
 				__self.#progress.setAttribute('value', 0);
 				__self.#loader.classList.remove('load');
+				__self.#loader.classList.remove('loading');
+				__self.#blockInput.classList.remove('disabled');
 				__self.#btnDown.removeAttribute('disabled');
 				__self.#btnSave.removeAttribute('disabled');
 				__self.#url.removeAttribute('disabled');
-				__self.#span.innerText = 'ОШИБКА ЗАПИСИСИ';
+				__self.#span.innerText = 'ОШИБКА ЗАПИСИ';
+				__self.#close.removeAttribute('disabled');
 			}
 		});
 		return !1;
@@ -414,6 +447,7 @@ class RutubeVideo extends HTMLElement {
 		this.#span = this.shadowRoot.querySelector('.block_result span');
 		this.#btnDown = this.shadowRoot.querySelector('.btn-download');
 		this.#btnSave = this.shadowRoot.querySelector('.btn-save');
+		this.#blockInput = this.shadowRoot.querySelector('.block_input');
 		this.#span.classList.remove('hidden');
 		this.#url.addEventListener('input', this);
 		this.#close.addEventListener('click', this);

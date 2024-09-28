@@ -15,9 +15,6 @@ module.exports = function(grunt) {
 		update = process.env.NWJS_UPDATE === '1' ? true : false,
 		version = process.env.NWJS_VERSION === '0' ? false : process.env.NWJS_VERSION; // 0.87.0
 
-	console.log(target, update, version);
-	console.log(grunt.template.date(new Date().getTime(), 'yyyy-mm-dd'));
-
 	grunt.loadNpmTasks('innosetup-compiler');
 
 	require('load-grunt-tasks')(grunt);
@@ -39,6 +36,14 @@ module.exports = function(grunt) {
 		},
 		flv = target ? '' : '-sdk',
 		pkg = grunt.file.readJSON('package.json');
+
+	console.table({
+		version     : `${pkg.version}`,
+		target_NWJS : target ? 'normal' : 'sdk',
+		update_NWJS : update ? 'обновление' : 'кеш',
+		version_NWJS: version == 0 ? 'последняя': `${version}`,
+		date        : grunt.template.date(new Date().getTime(), 'dd-mm-yyyy')
+	});
 
 	grunt.initConfig({
 		globalConfig: gc,
@@ -135,7 +140,7 @@ module.exports = function(grunt) {
 					'application/css/main.css': [
 						'test/css/main.css'
 					],
-					'application/css/component.css': [
+					'test/css/component.css': [
 						'test/css/component.css'
 					]
 				}
@@ -249,7 +254,14 @@ module.exports = function(grunt) {
 
 	update && tasks.push('downloader');
 
-	tasks.push( 'unzip', 'version_edit:main', 'copy:main', 'zip:main', 'clean:vk', 'buildnw:main');
+	tasks.push(
+		'unzip',
+		'version_edit:main',
+		'copy:main',
+		'zip:main',
+		'clean:vk',
+		'buildnw:main'
+	);
 
 	// Таск для запуска innosetup
 	// Клонируем Таск по умолчанию

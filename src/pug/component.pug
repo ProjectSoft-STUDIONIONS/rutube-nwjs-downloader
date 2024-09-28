@@ -1,24 +1,23 @@
 style
-	|@import url(css/component.css);
+	include ../../test/css/component.css
 slot
-div.downloader
-	div.image
-		div.block_image
-	div.links
-		div.block_input
-			input.url(type="text" value="" placeholder="URL видео RUTUBE")
-		div.block_text.text-right
-			div.title.text-left
-				|&#160;
-		div.block_btn.text-right
-			button(disabled title="СКАЧАТЬ").btn.btn-download.icon-download
-			button(disabled title="СОХРАНИТЬ").btn.btn-save.icon-save
-	div.progress_bar
-		div.block_progress
-			div.block_progress_text.text-center
-			progress.progress(min="0" max="100")
-		div.block_result.text-right
-			span.hidden
+.downloader
+	.image
+		.block_image
+	.links
+		.block_input
+			input.url(pseudo="-webkit-rutube-link" type="text" value="" placeholder="URL видео RUTUBE")
+			button(pseudo="-webkit-rutube-download" disabled title="СКАЧАТЬ").btn.btn-download.icon-download
+		.block_text.text-right
+			.title.text-left
+	.progress_bar
+		.block_progress
+			.block_progress--wrapp
+				.block_progress_text.text-center
+				progress.progress(pseudo="-webkit-rutube-progress" min="0" max="100")
+			button(pseudo="-webkit-rutube-save" disabled title="СОХРАНИТЬ").btn.btn-save.icon-save
+		.block_result.text-right
 			|&#160;
-	div.loader
-	button.btn.btn-close.icon-close(title="УДАЛИТЬ")
+			span
+	.loader
+	button.btn.btn-close.icon-close(pseudo="-webkit-rutube-close" title="УДАЛИТЬ")

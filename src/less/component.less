@@ -1,6 +1,12 @@
 @import "variables.less";
+@import "fonts/rutube-dl.less";
+@import "fonts/font.less";
+@import "inc/text.less";
+@import "inc/btn.less";
+
 :host{
 	font-size: 17px;
+	font-family: "Open Sans", Arial, Helvetica, sans-serif;
 	display: block;
 	background-color: #14191f;
 	color: #fff;
@@ -11,20 +17,23 @@
 	--rutube_image: data-uri('image/svg+xml', '../images/rutube.svg');
 	--rutube_loader: data-uri('image/svg+xml', '../images/tail-spin.svg');
 }
-@import "fonts/rutube-dl.less";
-@import "fonts/roboto.less";
-@import "inc/text.less";
-@import "inc/btn.less";
+
 *,
 *::before,
 *::after {
 	box-sizing: border-box;
 	user-select: none;
 }
+
+* {
+	font-family: "Open Sans", Arial, Helvetica, sans-serif;
+}
+
 a {
 	color: #fff;
 	cursor: pointer;
 }
+
 button {
 	cursor: pointer;
 	pointer-events: auto;
@@ -33,6 +42,56 @@ button {
 		pointer-events: none;
 	}
 }
+
+progress {
+	width: 100%;
+	display: block;
+	border-radius: 5px;
+	overflow: hidden;
+	height: 30px;
+	position: relative;
+	box-shadow: 0 0 3px #fff;
+	&::-webkit-progress-bar {
+		background-color: #000000; //#3f3f3f;
+	}
+	&::-webkit-progress-value {
+		//background-image: data-uri('../images/prg.gif');
+		background-color: #ffffff;
+		border-radius: 6px;
+		overflow: hidden;
+	}
+}
+
+input {
+	padding: 10px 15px;
+	border-radius: 6px;
+	border-width: 0;
+	text-overflow: ellipsis;
+	color: #333333;
+	background-color: #ffffff;
+	&,
+	&:focus,
+	&:focus-visible {
+		outline: unset;
+	}
+	&:disabled {
+		color: #ffffff;
+		background-color: #333;
+		box-shadow: 0 0 2px #fff;
+		pointer-events: none !important;
+		&::-webkit-input-placeholder {
+			+ div {
+				user-select: none;
+				-webkit-user-select: none;
+				pointer-events: none;
+			}
+		}
+	}
+	&::-webkit-input-placeholder {
+		font-style: italic;
+	}
+}
+
 .hidden {
 	display: none !important;
 }
@@ -42,6 +101,7 @@ button {
 	right: -18px;
 	top: -12px;
 }
+
 .downloader {
 	width: 100%;
 	display: flex;
@@ -49,6 +109,7 @@ button {
 	flex-wrap: wrap;
 	position: relative;
 }
+
 .loader {
 	position: absolute;
 	opacity: 1;
@@ -60,36 +121,43 @@ button {
 	right: 0px;
 	bottom: 0px;
 	z-index: 10;
-	&::before {
-		content: "";
-		display: block;
-		position: absolute;
-		right: 40px;
-		bottom: 50px;
-		width: 25px;
-		height: 25px;
-		background-image: var(--rutube_loader);
-		background-repeat: no-repeat;
-		background-position: center;
-		background-size: contain;
-	}
 	&.load {
+		&::before {
+			content: "";
+			display: block;
+			position: absolute;
+			right: 2px;
+			bottom: 88px;
+			width: 25px;
+			height: 25px;
+			background-image: var(--rutube_loader);
+			background-repeat: no-repeat;
+			background-position: center;
+			background-size: contain;
+		}
+	}
+	&.load,
+	&.loading {
 		visibility: visible;
 		opacity: 1;
 	}
 }
+
 .image {
 	padding-right: 15px;
 }
+
 .links {
 	padding-top: 10px;
 	max-width: calc(100% - 215px);
 	width: 100%;
 }
+
 .image,
 .links {
-	margin-bottom: 10px;
+	margin-bottom: 15px;
 }
+
 .progress {
 	width: 100%;
 	&_bar {
@@ -98,6 +166,7 @@ button {
 		border-radius: 5px;
 	}
 }
+
 .block {
 	&_image {
 		width: 200px;
@@ -124,72 +193,26 @@ button {
 	}
 	&_input {
 		margin-bottom: 10px;
+		&.disabled {
+			user-select: none;
+			-webkit-user-select: none;
+			input {
+				pointer-events: none;
+			}
+		}
 		input {
+			flex: 1 1 auto;
 			width: 100%;
 			display: block;
-			padding: 10px 15px;
-			border-radius: 6px;
-			border-width: 0;
-			text-overflow: ellipsis;
-			color: #333333;
-			background-color: #ffffff;
-			&,
-			&:focus,
-			&:focus-visible {
-				outline: unset;
-			}
-			&:disabled {
-				color: #ffffff;
-				background-color: #333;
-				box-shadow: 0 0 2px #fff;
-			}
-			&::-webkit-input-placeholder {
-				font-style: italic;
-			}
-		}
-	}
-	&_btn {
-		.btn {
-			font-size: 22px;
-			padding: 0;
-			&-download {
-				float: left;
-			}
-		}
-	}
-	&_text {
-		.title {
-			white-space: nowrap;
-			text-overflow: ellipsis;
-			overflow: hidden;
-			margin-bottom: 10px;
-		}
-		.btn {
-			&:disabled {
-				color: #ffffff;
-			}
 		}
 	}
 	&_progress {
 		position: relative;
-		progress {
-			width: 100%;
-			display: block;
-			border-radius: 5px;
-			overflow: hidden;
-			height: 20px;
-			position: relative;
-			box-shadow: 0 0 3px #fff;
-			&::-webkit-progress-bar {
-				background-color: #3f3f3f;
-			}
-			&::-webkit-progress-value {
-				background-color: #ffffff;
-				border-radius: 6px;
-				overflow: hidden;
-			}
-		}
-		> div {
+		margin-bottom: 10px;
+		&_text {
+			display: flex;
+			align-items: center;
+			justify-content: center;
 			position: absolute;
 			top: 0;
 			left: 0;
@@ -200,6 +223,18 @@ button {
 			z-index: 2;
 			mix-blend-mode: difference;
 		}
+		&--wrapp {
+			position: relative;
+			flex: 1 0 auto;
+		}
+	}
+	&_text {
+		.title {
+			white-space: nowrap;
+			text-overflow: ellipsis;
+			overflow: hidden;
+			margin-bottom: 10px;
+		}
 	}
 	&_result {
 		white-space: nowrap;
@@ -207,6 +242,18 @@ button {
 		overflow: hidden;
 		a.events {
 			pointer-events: none;
+		}
+	}
+	&_input,
+	&_progress {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		.btn {
+			flex: 0 0 auto;
+			font-size: 20px;
+			margin-left: 10px;
 		}
 	}
 }
