@@ -19,16 +19,26 @@ class RutubeVideo extends HTMLElement {
 	#span;
 	#btnDown;
 	#btnSave;
+	#prgresult;
 	#segments = [];
 	#dirname = "";
 	#name = "";
+	#download = false;
+
+	get download() {
+		return this.#download;
+	}
+
+	set download(value) {
+		throw new Error('Parameter download readonly!');
+	}
 
 	get sdk() {
 		return (nw.process.versions["nw-flavor"] == "sdk");
 	}
 
 	set sdk(value){
-		throw new Error('Parameter readonly!');
+		throw new Error('Parameter sdk readonly!');
 	}
 
 	get segments() {
@@ -36,7 +46,7 @@ class RutubeVideo extends HTMLElement {
 	}
 
 	set segments(value) {
-		throw new Error('Parameter readonly!');
+		throw new Error('Parameter segments readonly!');
 	}
 
 	get __dirname() {
@@ -44,7 +54,7 @@ class RutubeVideo extends HTMLElement {
 	}
 
 	set __dirname(value) {
-		throw new Error('Parameter readonly!');
+		throw new Error('Parameter __dirname readonly!');
 	}
 
 	get __name() {
@@ -52,7 +62,19 @@ class RutubeVideo extends HTMLElement {
 	}
 
 	set __name(value) {
-		throw new Error('Parameter readonly!');
+		throw new Error('Parameter __name readonly!');
+	}
+
+	get url() {
+		return this.#url.value
+	}
+
+	set url(value) {
+		this.#url.value = value;
+		this.#url.dispatchEvent(new CustomEvent('input', {
+			bubbles: true,
+			composed: true
+		}));
 	}
 
 	constructor() {
@@ -64,6 +86,7 @@ class RutubeVideo extends HTMLElement {
 		this.attachShadow({
 			mode: "open"
 		}).innerHTML = template;
+		__self.#download = false;
 	}
 
 	static formatTime (value) {
@@ -92,12 +115,23 @@ class RutubeVideo extends HTMLElement {
 			.substring(0, 250);;
 	}
 
+	init() {
+		if(this.#download){
+			return;
+		}
+		#btnDown.dispatchEvent(new CustomEvent('click', {
+			bubbles: true,
+			composed: true
+		}));
+	}
+
 	handleError() {
 		this.#name = '';
 		this.#title.title = "";
 		this.#title.innerHTML = "\u00A0";
 		this.#image.dataset.duration = "";
 		this.#segments = [];
+		this.#download = false;
 	}
 
 	createDir() {
@@ -148,6 +182,7 @@ class RutubeVideo extends HTMLElement {
 				__self.removeDir();
 				__self.createDir();
 				if ((m = regex.exec(url)) !== null) {
+					__self.#download = true;
 					__self.#btnDown.setAttribute("disabled", "disabled");
 					__self.#btnSave.setAttribute("disabled", "disabled");
 					__self.#loader.classList.add('load');
@@ -198,12 +233,14 @@ class RutubeVideo extends HTMLElement {
 								if(__self.#segments.length) {
 									// Готовы к скачиванию
 									__self.#btnDown.removeAttribute("disabled");
+									__self.#download = false;
 								}
 							}).catch((err) => {
 								// Обработать ошибки
 								__self.#loader.classList.remove('load');
 								__self.#blockInput.classList.remove('disabled');
 								__self.#image.removeAttribute('style');
+								__self.#download = false;
 								__self.sdk && console.log(err);
 							});
 						}).catch((err) => {
@@ -211,6 +248,7 @@ class RutubeVideo extends HTMLElement {
 							__self.#loader.classList.remove('load');
 							__self.#blockInput.classList.remove('disabled');
 							__self.#image.removeAttribute('style');
+							__self.#download = false;
 							__self.sdk && console.log(err);
 						});
 					}).catch((err) => {
@@ -218,6 +256,7 @@ class RutubeVideo extends HTMLElement {
 						__self.#loader.classList.remove('load');
 						__self.#blockInput.classList.remove('disabled');
 						__self.#image.removeAttribute('style');
+						__self.#download = false;
 						__self.sdk && console.log(err);
 					});
 				}else{
@@ -230,10 +269,12 @@ class RutubeVideo extends HTMLElement {
 					__self.#title.innerHTML = "\u00A0";
 					__self.#image.dataset.duration = "";
 					__self.#segments = [];
+					__self.#download = false;
 					// Обработать ошибки
 				}
 				break;
 			case 'click':
+				__self.#download = false;
 				__self.parentNode.removeChild(__self);
 				break;
 		}
@@ -242,89 +283,96 @@ class RutubeVideo extends HTMLElement {
 	async clickDownEvent(e) {
 		e.preventDefault();
 		let __self = this;
-		this.#close.setAttribute("disabled", "disabled");
-		if(this.#segments.length) {
+		__self.#close.setAttribute("disabled", "disabled");
+		if(__self.#segments.length) {
 			//this.#loader.classList.add('load');
-			this.#loader.classList.add('loading');
-			this.#blockInput.classList.add('disabled');
-			this.#btnDown.setAttribute('disabled', "disabled");
-			this.#btnSave.setAttribute('disabled', "disabled");
-			this.#url.setAttribute('disabled', "disabled");
-			let prgresult = this.shadowRoot.querySelector('.block_progress_text');
+			__self.#loader.classList.add('loading');
+			__self.#blockInput.classList.add('disabled');
+			__self.#btnDown.setAttribute('disabled', "disabled");
+			__self.#btnSave.setAttribute('disabled', "disabled");
+			__self.#url.setAttribute('disabled', "disabled");
+			__self.#download = true;
 			let segments = JSON.parse(JSON.stringify(this.segments)),
 				arrFiles = [],
 				key, int, ext,
 				padStrLen = String(segments.length).length;
 			while(segments.length){
 				ext = RutubeVideo.path.extname(segments[0]);
-				int = parseInt(this.segments.length - segments.length) + 1;
+				int = parseInt(__self.segments.length - segments.length) + 1;
 				let fname = 'segment-' + `${int}`.padStart(padStrLen, '0') + ext;
 				let fileOut = RutubeVideo.path.join(this.__dirname, fname);
 				arrFiles.push(fileOut);
-				this.#span.innerText = `СКАЧИВАНИЕ ${RutubeVideo.path.basename(segments[0])} ...`;
-				await this.downloadSegment(segments[0], fileOut).catch(e => __self.sdk && console.log('downloadSegment', e));
-				let prg = ( int / this.segments.length ) * 100;
-				this.#progress.setAttribute('value', prg);
+				__self.#span.innerText = `СКАЧИВАНИЕ ${RutubeVideo.path.basename(segments[0])} ...`;
+				await __self.downloadSegment(segments[0], fileOut).catch(e => __self.sdk && console.log('downloadSegment', e));
+				let prg = ( int / __self.segments.length ) * 100;
+				__self.#progress.setAttribute('value', prg);
 				if(parseFloat(prg) >= 0) {
-					prgresult.innerText = parseInt(prg) + "%";
+					__self.#prgresult.innerText = parseInt(prg) + "%";
 				}else{
-					prgresult.innerText = '';
+					__self.#prgresult.innerText = '';
 				}
 				segments.shift();
 			}
-			this.#span.innerText = ``;
-			let dir = this.__dirname;
-			let tName = this.UUID + ext;
-			let mp4Name = this.UUID + ".mp4";
+			__self.#span.innerText = ``;
+			let dir = __self.__dirname;
+			let tName = __self.UUID + ext;
+			let mp4Name = __self.UUID + ".mp4";
 			let error = false;
 			// Объединяем сегменты
-			this.#span.innerText = "ОБЪЕДИНЕНИЕ...";
+			__self.#span.innerText = "ОБЪЕДИНЕНИЕ...";
 			await RutubeVideo.splitFile.mergeFiles(arrFiles, RutubeVideo.path.join(dir, tName)).catch((e) => {
 				//this.#span.innerText = 'ОШИБКА ОБЪЕДИНЕНИЯ *.ts';
 				error = true;
+				__self.#download = false;
 			});
 			// Удаляем сегменты
-			await this.deleteFiles(/^segment-.*\.ts/, this.__dirname).catch((e) => {
+			await __self.deleteFiles(/^segment-.*\.ts/, __self.__dirname).catch((e) => {
 				//this.#span.innerText = 'ОШИБКА УДАЛЕНИЯ *.ts';
+				__self.#download = false;
 				error = true;
 			});
 			// Удаляем все mp4 если есть
-			await this.deleteFiles(/^.*\.mp4/, this.__dirname).catch((e) => {
+			await __self.deleteFiles(/^.*\.mp4/, __self.__dirname).catch((e) => {
 				//this.#span.innerText = 'ОШИБКА УДАЛЕНИЯ *.mp4';
+				__self.#download = false;
 				error = true;
 			});
 			// Запускаем ffmpeg для преобразования исходного ts файла в mp4
-			this.#span.innerText = "КОНВЕРТИРОВАНИЕ...";
-			await this.execFFmpeg(RutubeVideo.path.join(dir, tName), RutubeVideo.path.join(dir, mp4Name)).catch((e) => {
-				this.#span.innerText = `ОШИБКА КОНВЕРТИРОВАНИЯ В "${this.__name}.mp4"`;
+			__self.#span.innerText = "КОНВЕРТИРОВАНИЕ...";
+			await __self.execFFmpeg(RutubeVideo.path.join(dir, tName), RutubeVideo.path.join(dir, mp4Name)).catch((e) => {
+				__self.#span.innerText = `ОШИБКА КОНВЕРТИРОВАНИЯ В "${__self.__name}.mp4"`;
+				__self.#download = false;
 				error = true;
 			});
 			// Удаляем исходный файл ts
-			await this.deleteFile(RutubeVideo.path.join(dir, tName)).catch((e) => {
-				this.#span.innerText = `ОШИБКА УДАЛЕНИЯ`;
+			await __self.deleteFile(RutubeVideo.path.join(dir, tName)).catch((e) => {
+				__self.#span.innerText = `ОШИБКА УДАЛЕНИЯ`;
+				__self.#download = false;
 				error = true;
 			});
-			this.#progress.setAttribute('value', 0);
-			this.#btnDown.removeAttribute('disabled');
-			this.#btnSave.removeAttribute('disabled');
-			this.#close.removeAttribute("disabled");
-			this.#url.removeAttribute('disabled');
-			this.#loader.classList.remove('load');
-			this.#loader.classList.remove('loading');
-			this.#blockInput.classList.remove('disabled');
-			prgresult.innerText = '';
-			!error && (this.#span.innerText = `${this.__name}.mp4`);
+			__self.#progress.setAttribute('value', 0);
+			__self.#btnDown.removeAttribute('disabled');
+			__self.#btnSave.removeAttribute('disabled');
+			__self.#close.removeAttribute("disabled");
+			__self.#url.removeAttribute('disabled');
+			__self.#loader.classList.remove('load');
+			__self.#loader.classList.remove('loading');
+			__self.#blockInput.classList.remove('disabled');
+			__self.#prgresult.innerText = '';
+			__self.#download = false;
+			!error && (__self.#span.innerText = `${__self.__name}.mp4`);
 		}else{
-			this.#progress.setAttribute('value', 0);
-			this.#btnDown.setAttribute('disabled', "disabled");
-			this.#btnSave.setAttribute('disabled', "disabled");
-			this.#close.removeAttribute("disabled");
-			this.#url.removeAttribute('disabled');
-			this.#loader.classList.remove('load');
-			this.#loader.classList.remove('loading');
-			this.#blockInput.classList.remove('disabled');
-			prgresult.innerText = '';
-			this.#span.innerText = '';
+			__self.#progress.setAttribute('value', 0);
+			__self.#btnDown.setAttribute('disabled', "disabled");
+			__self.#btnSave.setAttribute('disabled', "disabled");
+			__self.#close.removeAttribute("disabled");
+			__self.#url.removeAttribute('disabled');
+			__self.#loader.classList.remove('load');
+			__self.#loader.classList.remove('loading');
+			__self.#blockInput.classList.remove('disabled');
+			__self.#prgresult.innerText = '';
+			__self.#span.innerText = '';
+			__self.#download = false;
 		}
 		return !1;
 	}
@@ -362,12 +410,14 @@ class RutubeVideo extends HTMLElement {
 		e.preventDefault();
 		let dialog = require('nw-dialog'),
 			__self = this,
-			prgresult = this.shadowRoot.querySelector('.block_progress_text'),
-			file = RutubeVideo.path.join(this.__dirname, this.UUID + ".mp4");
+			file = RutubeVideo.path.join(__self.__dirname, __self.UUID + ".mp4");
+		if(__self.__self.#download) {
+			return !1;
+		}
 
 		dialog.setContext(document);
 		// Имя Файла
-		let download = this.__name;
+		let download = __self.__name;
 		dialog.saveFileDialog(`${download}`, ['.mp4'], async function(result) {
 			__self.#loader.classList.add('loading');
 			__self.#blockInput.classList.add('disabled');
@@ -379,7 +429,8 @@ class RutubeVideo extends HTMLElement {
 			try {
 				RutubeVideo.fs.stat(file, function(err, stat){
 					if(!err){
-						prgresult.innerText = '';
+						__self.#download = true;
+						__self.#prgresult.innerText = '';
 						__self.#progress.setAttribute('value', 0);
 						__self.#span.innerText = 'ЗАПИСЬ ....';
 						const filesize = stat.size
@@ -388,11 +439,11 @@ class RutubeVideo extends HTMLElement {
 						readStream.on('data', function(buffer){
 							bytesCopied += buffer.length
 							let porcentage = (bytesCopied / filesize) * 100;//0 .. 1
-							prgresult.innerText = parseInt(porcentage) + "%";
+							__self.#prgresult.innerText = parseInt(porcentage) + "%";
 							__self.#progress.setAttribute('value', porcentage);
 						})
 						readStream.on('end', function(){
-							prgresult.innerText = "";
+							__self.#prgresult.innerText = "";
 							__self.#progress.setAttribute('value', 0);
 							__self.#loader.classList.remove('load');
 							__self.#loader.classList.remove('loading');
@@ -402,10 +453,11 @@ class RutubeVideo extends HTMLElement {
 							__self.#url.removeAttribute('disabled');
 							__self.#close.removeAttribute('disabled');
 							__self.#span.innerText = `${__self.__name}.mp4`;
+							__self.#download = false;
 						})
 						readStream.pipe(RutubeVideo.fs.createWriteStream(result));
 					}else{
-						prgresult.innerText = "";
+						__self.#prgresult.innerText = "";
 						__self.#progress.setAttribute('value', 0);
 						__self.#loader.classList.remove('load');
 						__self.#loader.classList.remove('loading');
@@ -415,11 +467,12 @@ class RutubeVideo extends HTMLElement {
 						__self.#url.removeAttribute('disabled');
 						__self.#close.removeAttribute('disabled');
 						__self.#span.innerText = 'ОШИБКА ЗАПИСИ';
+						__self.#download = false;
 					}
 				});
 			}catch(e){
 				__self.sdk && console.log(e);
-				prgresult.innerText = "";
+				__self.#prgresult.innerText = "";
 				__self.#progress.setAttribute('value', 0);
 				__self.#loader.classList.remove('load');
 				__self.#loader.classList.remove('loading');
@@ -429,6 +482,7 @@ class RutubeVideo extends HTMLElement {
 				__self.#url.removeAttribute('disabled');
 				__self.#span.innerText = 'ОШИБКА ЗАПИСИ';
 				__self.#close.removeAttribute('disabled');
+				__self.#download = false;
 			}
 		});
 		return !1;
@@ -462,7 +516,6 @@ class RutubeVideo extends HTMLElement {
 	}	
 
 	connectedCallback() {
-		let __self = this;
 		this.#image = this.shadowRoot.querySelector('.block_image');
 		this.#url = this.shadowRoot.querySelector('.url');
 		this.#title = this.shadowRoot.querySelector('.title');
@@ -474,6 +527,7 @@ class RutubeVideo extends HTMLElement {
 		this.#btnDown = this.shadowRoot.querySelector('.btn-download');
 		this.#btnSave = this.shadowRoot.querySelector('.btn-save');
 		this.#blockInput = this.shadowRoot.querySelector('.block_input');
+		this.#prgresult = this.shadowRoot.querySelector('.block_progress_text');
 		this.#span.classList.remove('hidden');
 		this.#url.addEventListener('input', this);
 		this.#close.addEventListener('click', this);
@@ -482,6 +536,7 @@ class RutubeVideo extends HTMLElement {
 		this.#btnDown.setAttribute('disabled', "disabled");
 		this.#btnSave.setAttribute('disabled', "disabled");
 		this.#name = "";
+		this.#download = false;
 		this.createDir();
 		this.sdk && console.log("Ready 😎");
 	}
