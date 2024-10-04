@@ -8,6 +8,8 @@
 *.7z
 *.ai
 *.psd
+*.ts
+*.mp4
 
 application/**
 test/

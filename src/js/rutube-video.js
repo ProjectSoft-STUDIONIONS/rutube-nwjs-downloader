@@ -4,6 +4,7 @@ class RutubeVideo extends HTMLElement {
 	static path = require('node:path');
 	static stream = require('node:stream');
 	static util = require('node:util');
+	static os = require('node:os');
 	static Blob = require('node:buffer').Blob;
 	static URL_CONST = require('node:url');
 	static splitFile = require('split-file');
@@ -24,6 +25,23 @@ class RutubeVideo extends HTMLElement {
 	#dirname = "";
 	#name = "";
 	#download = false;
+	#automate = false;
+
+	get automate() {
+		return this.#automate;
+	}
+
+	set automate(value) {
+		let val = Boolean(value);
+		val = val ? true : false;
+		this.#automate = val;
+		this.sdk && console.log(this.#automate, val);
+		this.#automate && (
+			this.#close.setAttribute("disabled", "disabled"),
+			this.#btnDown.setAttribute("disabled", "disabled"),
+			this.#url.setAttribute("disabled", "disabled")
+		);
+	}
 
 	get download() {
 		return this.#download;
@@ -86,7 +104,8 @@ class RutubeVideo extends HTMLElement {
 		this.attachShadow({
 			mode: "open"
 		}).innerHTML = template;
-		__self.#download = false;
+		this.#download = false;
+		this.#automate = false;
 	}
 
 	static formatTime (value) {
@@ -119,10 +138,13 @@ class RutubeVideo extends HTMLElement {
 		if(this.#download){
 			return;
 		}
-		#btnDown.dispatchEvent(new CustomEvent('click', {
-			bubbles: true,
-			composed: true
-		}));
+		if(this.automate) {
+			this.#btnDown.removeAttribute('disabled');
+			this.#btnDown.dispatchEvent(new CustomEvent('click', {
+				bubbles: true,
+				composed: true
+			}));
+		}
 	}
 
 	handleError() {
@@ -203,7 +225,7 @@ class RutubeVideo extends HTMLElement {
 					fetch(pls).then(res => res.json()).then((json) => {
 						__self.#image.dataset.duration = RutubeVideo.formatTime(json.duration);
 						__self.#title.title = __self.#title.innerText = json.title;
-						__self.#image.setAttribute('style', `--rutube_image: url(${json.thumbnail_url});`);
+						__self.#image.setAttribute('style', `--rutube_image: url(${json.thumbnail_url}?width=300);`);
 						__self.#name = RutubeVideo.sanitize(json.title);
 						// Получаем информацию о плейлисте
 						fetch(json["video_balancer"]["m3u8"]).then(res => res.text()).then(text => {
@@ -232,8 +254,20 @@ class RutubeVideo extends HTMLElement {
 								__self.#blockInput.classList.remove('disabled');
 								if(__self.#segments.length) {
 									// Готовы к скачиванию
-									__self.#btnDown.removeAttribute("disabled");
+									if(!__self.automate) {
+										__self.#close.removeAttribute("disabled");
+									}
 									__self.#download = false;
+								}else{
+									// Сегиентов нет
+									if(__self.automate) {
+										// Если в автоматическом режиме - удаляемся
+										__self.#close.removeAttribute("disabled");
+										__self.#close.dispatchEvent(new CustomEvent('click', {
+											bubbles: true,
+											composed: true
+										}));
+									}
 								}
 							}).catch((err) => {
 								// Обработать ошибки
@@ -242,6 +276,14 @@ class RutubeVideo extends HTMLElement {
 								__self.#image.removeAttribute('style');
 								__self.#download = false;
 								__self.sdk && console.log(err);
+								if(__self.automate) {
+									// Если в автоматическом режиме - удаляемся
+									__self.#close.removeAttribute("disabled");
+									__self.#close.dispatchEvent(new CustomEvent('click', {
+										bubbles: true,
+										composed: true
+									}));
+								}
 							});
 						}).catch((err) => {
 							// Обработать ошибки
@@ -250,6 +292,14 @@ class RutubeVideo extends HTMLElement {
 							__self.#image.removeAttribute('style');
 							__self.#download = false;
 							__self.sdk && console.log(err);
+							if(__self.automate) {
+								// Если в автоматическом режиме - удаляемся
+								__self.#close.removeAttribute("disabled");
+								__self.#close.dispatchEvent(new CustomEvent('click', {
+									bubbles: true,
+									composed: true
+								}));
+							}
 						});
 					}).catch((err) => {
 						// Обработать ошибки
@@ -258,6 +308,14 @@ class RutubeVideo extends HTMLElement {
 						__self.#image.removeAttribute('style');
 						__self.#download = false;
 						__self.sdk && console.log(err);
+						if(__self.automate) {
+							// Если в автоматическом режиме - удаляемся
+							__self.#close.removeAttribute("disabled");
+							__self.#close.dispatchEvent(new CustomEvent('click', {
+								bubbles: true,
+								composed: true
+							}));
+						}
 					});
 				}else{
 					__self.#loader.classList.remove('load');
@@ -271,10 +329,26 @@ class RutubeVideo extends HTMLElement {
 					__self.#segments = [];
 					__self.#download = false;
 					// Обработать ошибки
+					if(__self.automate) {
+						// Если в автоматическом режиме - удаляемся
+						__self.#close.removeAttribute("disabled");
+						__self.#close.dispatchEvent(new CustomEvent('click', {
+							bubbles: true,
+							composed: true
+						}));
+					}
 				}
 				break;
 			case 'click':
 				__self.#download = false;
+				// Если в автоматическом режиме
+				// Сообщаем о удалении элемента
+				if(__self.automate) {
+					__self.dispatchEvent(new CustomEvent('disconnected', {
+						bubbles: true,
+						composed: true
+					}));
+				}
 				__self.parentNode.removeChild(__self);
 				break;
 		}
@@ -361,6 +435,21 @@ class RutubeVideo extends HTMLElement {
 			__self.#prgresult.innerText = '';
 			__self.#download = false;
 			!error && (__self.#span.innerText = `${__self.__name}.mp4`);
+			// Если в автоматическом режиме - сохраняем и удаляемся
+			if(!error) {
+				// Если в автоматическом режиме
+				// Запускаем сохранение
+				if(__self.automate){
+					__self.#download = true;
+					// Определить место сохранения файла
+					let homedir = RutubeVideo.path.join(RutubeVideo.os.homedir(), "Documents", "Rutube-DL"),
+						result = RutubeVideo.path.join(homedir, `${__self.__name}.mp4`);
+					// Создать папку
+					RutubeVideo.fs.mkdirSync(homedir, {recursive: true});
+					// Запустить сохранение
+					__self.saveMp4File(result);
+				}
+			}
 		}else{
 			__self.#progress.setAttribute('value', 0);
 			__self.#btnDown.setAttribute('disabled', "disabled");
@@ -406,57 +495,34 @@ class RutubeVideo extends HTMLElement {
 		})
 	}
 
-	clickSaveEvent(e) {
-		e.preventDefault();
-		let dialog = require('nw-dialog'),
-			__self = this,
+	async saveMp4File(result) {
+		const __self = this,
 			file = RutubeVideo.path.join(__self.__dirname, __self.UUID + ".mp4");
-		if(__self.__self.#download) {
-			return !1;
-		}
-
-		dialog.setContext(document);
-		// Имя Файла
-		let download = __self.__name;
-		dialog.saveFileDialog(`${download}`, ['.mp4'], async function(result) {
-			__self.#loader.classList.add('loading');
-			__self.#blockInput.classList.add('disabled');
-			__self.#btnDown.setAttribute('disabled', "disabled");
-			__self.#btnSave.setAttribute('disabled', "disabled");
-			__self.#url.setAttribute('disabled', "disabled");
-			__self.#close.setAttribute("disabled", "disabled");
-			// Скачиваем (копируем) в выбранное место
-			try {
-				RutubeVideo.fs.stat(file, function(err, stat){
-					if(!err){
-						__self.#download = true;
-						__self.#prgresult.innerText = '';
-						__self.#progress.setAttribute('value', 0);
-						__self.#span.innerText = 'ЗАПИСЬ ....';
-						const filesize = stat.size
-						let bytesCopied = 0
-						const readStream = RutubeVideo.fs.createReadStream(file)
-						readStream.on('data', function(buffer){
-							bytesCopied += buffer.length
-							let porcentage = (bytesCopied / filesize) * 100;//0 .. 1
-							__self.#prgresult.innerText = parseInt(porcentage) + "%";
-							__self.#progress.setAttribute('value', porcentage);
-						})
-						readStream.on('end', function(){
-							__self.#prgresult.innerText = "";
-							__self.#progress.setAttribute('value', 0);
-							__self.#loader.classList.remove('load');
-							__self.#loader.classList.remove('loading');
-							__self.#blockInput.classList.remove('disabled');
-							__self.#btnDown.removeAttribute('disabled');
-							__self.#btnSave.removeAttribute('disabled');
-							__self.#url.removeAttribute('disabled');
-							__self.#close.removeAttribute('disabled');
-							__self.#span.innerText = `${__self.__name}.mp4`;
-							__self.#download = false;
-						})
-						readStream.pipe(RutubeVideo.fs.createWriteStream(result));
-					}else{
+		__self.#loader.classList.add('loading');
+		__self.#blockInput.classList.add('disabled');
+		__self.#btnDown.setAttribute('disabled', "disabled");
+		__self.#btnSave.setAttribute('disabled', "disabled");
+		__self.#url.setAttribute('disabled', "disabled");
+		__self.#close.setAttribute("disabled", "disabled");
+		try {
+			RutubeVideo.fs.stat(file, function(err, stat){
+				if(!err){
+					__self.#download = true;
+					__self.#prgresult.innerText = '';
+					__self.#progress.setAttribute('value', 0);
+					__self.#span.innerText = 'ЗАПИСЬ ....';
+					const filesize = stat.size
+					let bytesCopied = 0
+					const readStream = RutubeVideo.fs.createReadStream(file)
+					readStream.on('data', function(buffer){
+						bytesCopied += buffer.length
+						let porcentage = (bytesCopied / filesize) * 100;//0 .. 1
+						__self.#prgresult.innerText = parseInt(porcentage) + "%";
+						__self.#progress.setAttribute('value', porcentage);
+					});
+					readStream.on('error', function(buffer){
+					})
+					readStream.on('end', function(){
 						__self.#prgresult.innerText = "";
 						__self.#progress.setAttribute('value', 0);
 						__self.#loader.classList.remove('load');
@@ -466,24 +532,63 @@ class RutubeVideo extends HTMLElement {
 						__self.#btnSave.removeAttribute('disabled');
 						__self.#url.removeAttribute('disabled');
 						__self.#close.removeAttribute('disabled');
-						__self.#span.innerText = 'ОШИБКА ЗАПИСИ';
+						__self.#span.innerText = `${__self.__name}.mp4`;
 						__self.#download = false;
-					}
-				});
-			}catch(e){
-				__self.sdk && console.log(e);
-				__self.#prgresult.innerText = "";
-				__self.#progress.setAttribute('value', 0);
-				__self.#loader.classList.remove('load');
-				__self.#loader.classList.remove('loading');
-				__self.#blockInput.classList.remove('disabled');
-				__self.#btnDown.removeAttribute('disabled');
-				__self.#btnSave.removeAttribute('disabled');
-				__self.#url.removeAttribute('disabled');
-				__self.#span.innerText = 'ОШИБКА ЗАПИСИ';
-				__self.#close.removeAttribute('disabled');
-				__self.#download = false;
-			}
+						readStream.close();
+						if(__self.automate){
+							setTimeout(() => {
+								__self.#close.dispatchEvent(new CustomEvent('click', {
+									bubbles: true,
+									composed: true
+								}));
+							}, 100);
+							
+						}
+					})
+					readStream.pipe(RutubeVideo.fs.createWriteStream(result));
+				}else{
+					__self.#prgresult.innerText = "";
+					__self.#progress.setAttribute('value', 0);
+					__self.#loader.classList.remove('load');
+					__self.#loader.classList.remove('loading');
+					__self.#blockInput.classList.remove('disabled');
+					__self.#btnDown.removeAttribute('disabled');
+					__self.#btnSave.removeAttribute('disabled');
+					__self.#url.removeAttribute('disabled');
+					__self.#close.removeAttribute('disabled');
+					__self.#span.innerText = 'ОШИБКА ЗАПИСИ';
+					__self.#download = false;
+				}
+			});
+		}catch(e){
+			__self.sdk && console.log(e);
+			__self.#prgresult.innerText = "";
+			__self.#progress.setAttribute('value', 0);
+			__self.#loader.classList.remove('load');
+			__self.#loader.classList.remove('loading');
+			__self.#blockInput.classList.remove('disabled');
+			__self.#btnDown.removeAttribute('disabled');
+			__self.#btnSave.removeAttribute('disabled');
+			__self.#url.removeAttribute('disabled');
+			__self.#span.innerText = 'ОШИБКА ЗАПИСИ';
+			__self.#close.removeAttribute('disabled');
+			__self.#download = false;
+		}
+	}
+
+	clickSaveEvent(e) {
+		e.preventDefault();
+		let dialog = require('nw-dialog'),
+			__self = this;
+		if(this.#download) {
+			return !1;
+		}
+		dialog.setContext(document);
+		// Имя Файла
+		let download = this.__name;
+		dialog.saveFileDialog(`${download}`, ['.mp4'], async function(result) {
+			// Скачиваем (копируем) в выбранное место
+			__self.saveMp4File(result);
 		});
 		return !1;
 	}
@@ -539,6 +644,11 @@ class RutubeVideo extends HTMLElement {
 		this.#download = false;
 		this.createDir();
 		this.sdk && console.log("Ready 😎");
+		this.sdk && console.table(RutubeVideo.os.homedir());
+		this.dispatchEvent(new CustomEvent('connected', {
+			bubbles: true,
+			composed: true
+		}));
 	}
 
 	disconnectedCallback() {

@@ -6,18 +6,18 @@ slot
 		.block_image
 	.links
 		.block_input
-			input.url(pseudo="-webkit-rutube-link" type="text" value="" placeholder="URL видео RUTUBE")
-			button(pseudo="-webkit-rutube-download" disabled title="СКАЧАТЬ").btn.btn-download.icon-download
+			input.url(type="text" value="" placeholder="URL видео RUTUBE")
+			button(disabled title="СКАЧАТЬ").btn.btn-download.icon-download
 		.block_text.text-right
 			.title.text-left
 	.progress_bar
 		.block_progress
 			.block_progress--wrapp
 				.block_progress_text.text-center
-				progress.progress(pseudo="-webkit-rutube-progress" min="0" max="100")
-			button(pseudo="-webkit-rutube-save" disabled title="СОХРАНИТЬ").btn.btn-save.icon-save
+				progress.progress(min="0" max="100")
+			button(disabled title="СОХРАНИТЬ").btn.btn-save.icon-save
 		.block_result.text-right
 			|&#160;
 			span
 	.loader
-	button.btn.btn-close.icon-close(pseudo="-webkit-rutube-close" title="УДАЛИТЬ")
+	button.btn.btn-close.icon-close(title="УДАЛИТЬ")
