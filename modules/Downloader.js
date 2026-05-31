@@ -96,6 +96,7 @@ module.exports = function(grunt) {
 
 	function getManifest(){
 		return new Promise(async function(resolve, reject){
+				// resolve();
 			let cah = await removeFile(".cache/manifest.json");
 			if(cah){
 				const { DownloaderHelper } = require('node-downloader-helper');

@@ -2,12 +2,13 @@ module.exports = function(grunt) {
 	process.removeAllListeners('warning');
 	require('dotenv').config();
 
-	// target=true - nwjs sdk = nortmal
-	// target=false - nwjs sdk = sdk
-	// update=true - произвести скачивание nwjs и ffmpeg
-	// update=false - не производить скачивание nwjs и ffmpeg
+	// target=true   - nwjs sdk = nortmal
+	// target=false  - nwjs sdk = sdk
+	// update=true   - произвести скачивание nwjs и ffmpeg
+	// update=false  - не производить скачивание nwjs и ffmpeg
+	// version=x.x.x - версия nwjs. version=0 - последня стабильная версия
 	// В корне проекта присутствие файла .env обязятельно
-	// Параметры NWJS_TARGET и NWJS_UPDATE должны быть заданы. 
+	// Параметры NWJS_TARGET и NWJS_UPDATE должны быть заданы числами 1 или 0 
 	// При первом запуске или смене SDK NWJS_UPDATE должен быть равен 1
 	// NWJS_VERSION должен содержать номер нужной версии или 0 для загрузки последней
 
